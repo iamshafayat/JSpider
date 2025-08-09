@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Get all endpoints from JavaScript files on any website">
+  <title>JSpider</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"/>
+  <link rel="icon" href="favicon.png">
+</head>
+<body>
+
+  <div class="wrapper">
+    <header>
+      <h1>🕷️ JSpider</h1>
+      <p class="tagline">Smart crawler for hidden endpoints.</p>
+      <p>Crawl and extract hidden API endpoints and URLs from JavaScript files and HTML source code — directly in your browser.</p>
+      <p>Built for recon, lightweight and 100% client-side.</p>
+    </header>
+
+    <section class="input-group">
+      <input id="urlInput" type="url" placeholder="https://example.com" autofocus required/>
+      <button id="scanBtn">Scan</button>
+    </section>
+
+    <section id="filter-section" style="display: none;">
+      <input id="filterInput" placeholder="🔎 Filter endpoints..." />
+    </section>
+
+    <div id="status" class="status"></div>
+    <section id="results" class="results"></section>
+	
+	<section id="actions" class="export-actions" style="display: none;">
+	  <button id="exportTxt">📥 Export .txt</button>
+      <button id="exportJson">📥 Export .json</button>
+    </section>
+
+    <footer>
+      <p>
+        Made with ❤️ by
+        <a href="https://www.linkedin.com/in/iamshafayat" target="_blank" rel="noopener noreferrer">
+        Shafayat Ahmed Alif</a>
+        for Security Researchers
+      </p>
+    </footer>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
