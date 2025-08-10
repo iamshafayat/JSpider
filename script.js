@@ -7,6 +7,7 @@ const exportTxt = document.getElementById("exportTxt");
 const exportJson = document.getElementById("exportJson");
 
 const allResults = [];
+const scannedJs = new Set(); // avoid duplicate scans across sources
 
 const proxyUrl = (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
@@ -15,57 +16,90 @@ const endpointRegex = new RegExp(
   "g"
 );
 
+// BLOCK garbage resource extensions
 const excludedExtensions = [
-  ".woff", ".woff2", ".ttf", ".otf", ".png", ".jpg", ".jpeg", ".svg",
-  ".gif", ".ico", ".webp", ".css", ".mp4", ".m4v", ".webm",
-  ".mp3", ".wav", ".json", ".map", ".mjs"
+  ".woff", ".woff2", ".ttf", ".otf", ".eot", ".sfnt",
+  ".png", ".jpg", ".jpeg", ".svg", ".gif", ".ico", ".webp", ".bmp", ".apng", ".tif", ".tiff",
+  ".css", ".less", ".sass",
+  ".map", ".json", ".txt",
+  ".mp4", ".m4v", ".webm", ".mp3", ".wav", ".ogg", ".flac",
+  ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".rtf",
+  ".zip", ".rar", ".tar", ".gz", ".7z",
+  ".exe", ".apk", ".ipa", ".dmg", ".bin", ".jar", ".class",
+  ".swf", ".log", ".tmp", ".bak", ".old"
 ];
 
+// BLOCK garbage/tracker domains
 const externalDomainsToIgnore = [
-  "facebook.com", "instagram.com", "twitter.com", "tiktok.com", "google.com",
-  "gstatic.com", "fonts.googleapis.com", "cdn.adobedtm.com", "cookielaw.org",
-  "scene7.com", "helix-rum-js", "doubleclick.net", "googletagmanager.com", "youtube.com", "linkedin.com"
+  "facebook.com", "instagram.com", "twitter.com", "tiktok.com", "linkedin.com",
+  "youtube.com", "vimeo.com", "pinterest.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com",
+  "unpkg.com", "bootstrapcdn.com", "maxcdn.bootstrapcdn.com",
+  "fonts.googleapis.com", "fonts.gstatic.com",
+  "gstatic.com", "google.com", "googleapis.com",
+  "googletagmanager.com", "googlesyndication.com", "google-analytics.com", "gtag/js",
+  "doubleclick.net", "cookielaw.org", "cdn.adobedtm.com", "scene7.com",
+  "akamaihd.net", "brightcove.net", "vidyard.com", "wistia.com",
+  "newrelic.com", "datadoghq.com", "cloudflareinsights.com",
+  "optimizely.com", "hotjar.com", "segment.com", "intercom.io",
+  "salesforce.com", "liveperson.net", "zendesk.com", "helix-rum-js",
+  "sentry.io", "mixpanel.com", "disqus.com", "addthis.com", "sharethis.com", "criteo.com",
+  "tracking.", "pixel.", "collect.", "recaptcha.net"
+];
+
+// BLOCK garbage prefixes like markup://, js://, aura://
+const disallowedPrefixes = [
+  "js://", "markup://", "aura://", "java://", "css://",
+  "object://", "text://", "xml://", "apex://", "apexclass://",
+  "resource://", "data://", "mailto:", "tel:", "blob:", "file://",
+  "intent://", "chrome-extension://", "about:", "chrome://"
 ];
 
 scanBtn.addEventListener("click", async () => {
-  const siteUrl = urlInput.value.trim();
-  if (!siteUrl || !siteUrl.startsWith("http")) {
-    alert("Please enter a valid full URL with https...");
+  let siteUrl = urlInput.value.trim();
+  if (!siteUrl) {
+    alert("Enter a valid full URL (e.g., https://example.com)");
     return;
+  }
+  if (!/^https?:\/\//i.test(siteUrl)) {
+    siteUrl = "https://" + siteUrl; // auto-HTTPS for convenience
   }
 
   scanBtn.disabled = true;
   results.innerHTML = "";
   status.innerText = "Fetching site...";
   allResults.length = 0;
+  scannedJs.clear();
   exportActions.style.display = "none";
 
   try {
     const html = await fetchHtml(siteUrl);
     const jsFiles = extractJSUrls(html, siteUrl);
 
-    if (jsFiles.length === 0) {
-      status.innerText = "No JS files found.";
-    } else {
-      for (const jsUrl of jsFiles) {
+    // Full parallel scan (no limit)
+    let completed = 0;
+    await Promise.all(
+      jsFiles.map(async (jsUrl) => {
+        if (scannedJs.has(jsUrl)) return;
+        scannedJs.add(jsUrl);
+
         status.innerText = `Scanning: ${jsUrl}`;
         const endpoints = await extractEndpointsFromJS(jsUrl);
         allResults.push({ jsUrl, endpoints });
         display(jsUrl, endpoints);
-      }
-    }
+        completed++;
+        status.innerText = `Scanned ${completed}/${jsFiles.length}`;
+      })
+    );
 
     status.innerText = "Scan complete!";
     exportActions.style.display = allResults.length ? "flex" : "none";
 
     const filterSection = document.getElementById("filter-section");
     const filterInput = document.getElementById("filterInput");
-
     if (filterSection && filterInput) {
       filterSection.style.display = "block";
       filterInput.value = "";
     }
-
   } catch (e) {
     console.error(e);
     status.innerText = "Error occurred. Try another URL.";
@@ -81,32 +115,23 @@ async function fetchHtml(baseUrl) {
   const html = await res.text();
   const rawHtmlTargets = [];
 
-  // <a> and <link> hrefs
   const hrefMatches = [...html.matchAll(/<(a|link)[^>]+href=["']([^"']+)["']/gi)];
   rawHtmlTargets.push(...hrefMatches.map(m => m[2]));
 
-  // Inline <script>
   const scriptContentMatches = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)];
   scriptContentMatches.forEach(match => {
-    const inlineCode = match[1];
+    const inlineCode = match[1] || "";
     const inlineEndpoints = [...inlineCode.matchAll(endpointRegex)]
       .map(m => m[1])
-      .filter(url => {
-        const lowered = url.toLowerCase();
-        return (
-          !excludedExtensions.some(ext => lowered.endsWith(ext)) &&
-          !externalDomainsToIgnore.some(domain => lowered.includes(domain)) &&
-          !lowered.includes("base64") &&
-          lowered.length < 300
-        );
-      });
+      .filter(url => filterUrl(url));
     rawHtmlTargets.push(...inlineEndpoints);
   });
 
   const filteredHtmlLinks = [];
   const jsToScanFromLinks = [];
 
-  for (let link of rawHtmlTargets) {
+  rawHtmlTargets.forEach(link => {
+    if (!link) return;
     const lowered = link.toLowerCase();
     const isFull = lowered.startsWith("http://") || lowered.startsWith("https://");
     const isJsOrJson = lowered.endsWith(".js") || lowered.endsWith(".json");
@@ -115,51 +140,52 @@ async function fetchHtml(baseUrl) {
       try {
         const fullUrl = new URL(link, baseUrl).href;
         jsToScanFromLinks.push(fullUrl);
-      } catch (e) {
-        console.warn("Invalid relative link:", link);
-      }
-      continue;
+      } catch {}
+      return;
     }
 
-    if (
-      !excludedExtensions.some(ext => lowered.endsWith(ext)) &&
-      !externalDomainsToIgnore.some(domain => lowered.includes(domain)) &&
-      !lowered.includes("base64") &&
-      lowered.length < 300
-    ) {
+    if (filterUrl(lowered)) {
       filteredHtmlLinks.push(link);
     }
-  }
+  });
 
   if (filteredHtmlLinks.length > 0) {
-    allResults.push({ jsUrl: "Visible HTML Links", endpoints: [...new Set(filteredHtmlLinks)] });
-    display("Visible HTML Links", [...new Set(filteredHtmlLinks)]);
+    const dedup = [...new Set(filteredHtmlLinks)];
+    allResults.push({ jsUrl: "Visible HTML Links", endpoints: dedup });
+    display("Visible HTML Links", dedup);
   }
 
-  for (const jsUrl of jsToScanFromLinks) {
-    status.innerText = `Scanning [href] JS: ${jsUrl}`;
-    const endpoints = await extractEndpointsFromJS(jsUrl);
-    allResults.push({ jsUrl, endpoints });
-    display(jsUrl, endpoints);
-  }
+  // Scan JS discovered via href in parallel (no limit)
+  await Promise.all(
+    jsToScanFromLinks.map(async (jsUrl) => {
+      if (scannedJs.has(jsUrl)) return;
+      scannedJs.add(jsUrl);
+
+      status.innerText = `Scanning [href] JS: ${jsUrl}`;
+      const endpoints = await extractEndpointsFromJS(jsUrl);
+      allResults.push({ jsUrl, endpoints });
+      display(jsUrl, endpoints);
+    })
+  );
 
   return html;
 }
 
 function extractJSUrls(html, baseUrl) {
   const re = /<script[^>]+src=["']([^"']+)["']/gi;
-  let match, urls = [];
+  let match;
+  const urls = [];
+  const baseHost = new URL(baseUrl).hostname.toLowerCase();
 
   while ((match = re.exec(html)) !== null) {
     try {
       const fullUrl = new URL(match[1], baseUrl).href;
       const lowered = fullUrl.toLowerCase();
+      const host = new URL(fullUrl).hostname.toLowerCase();
 
-      const isExternal = !fullUrl.includes(new URL(baseUrl).hostname);
-      const isGarbage = excludedExtensions.some(ext => lowered.endsWith(ext));
-      const isBlockedDomain = externalDomainsToIgnore.some(domain => lowered.includes(domain));
-
-      if (isExternal || isGarbage || isBlockedDomain) continue;
+      // Only scan same-site JS (correct/robust check)
+      const sameSite = host === baseHost || host.endsWith("." + baseHost);
+      if (!sameSite || !filterUrl(lowered)) continue;
 
       urls.push(fullUrl);
     } catch {}
@@ -171,39 +197,52 @@ function extractJSUrls(html, baseUrl) {
 async function extractEndpointsFromJS(jsUrl) {
   try {
     const res = await fetch(proxyUrl(jsUrl));
+    if (!res.ok) {
+      console.warn("Could not fetch (status " + res.status + "):", jsUrl);
+      return [];
+    }
     const code = await res.text();
     const matches = [...code.matchAll(endpointRegex)];
     const raw = matches.map(m => m[1]);
-
-    const filtered = [...new Set(
-      raw.filter(url => {
-        const lowered = url.toLowerCase();
-        return (
-          !excludedExtensions.some(ext => lowered.endsWith(ext)) &&
-          !externalDomainsToIgnore.some(domain => lowered.includes(domain)) &&
-          !lowered.includes("base64") &&
-          lowered.length < 300
-        );
-      })
-    )];
-
+    const filtered = [...new Set(raw.filter(url => filterUrl(url)))];
     return filtered;
   } catch (e) {
-    console.warn("Could not fetch:", jsUrl);
+    console.warn("Could not fetch:", jsUrl, e);
     return [];
   }
+}
+
+function filterUrl(url) {
+  const lowered = (url || "").toLowerCase();
+  return (
+    lowered &&
+    !excludedExtensions.some(ext => lowered.endsWith(ext)) &&
+    !externalDomainsToIgnore.some(domain => lowered.includes(domain)) &&
+    !disallowedPrefixes.some(prefix => lowered.startsWith(prefix)) &&
+    !lowered.includes("base64") &&
+    lowered.length < 300
+  );
 }
 
 function display(jsUrl, endpoints) {
   const container = document.createElement("div");
   container.className = "card";
 
-  if (jsUrl.includes("Visible HTML Links")) {
+  if (jsUrl === "Visible HTML Links") {
     container.classList.add("html-section");
   }
 
   const title = document.createElement("h3");
   title.innerText = jsUrl;
+
+  if (!endpoints || endpoints.length === 0) {
+    const fallback = document.createElement("pre");
+    fallback.innerText = "No endpoints found.";
+    container.appendChild(title);
+    container.appendChild(fallback);
+    results.appendChild(container);
+    return;
+  }
 
   const list = document.createElement("ol");
 
@@ -222,8 +261,18 @@ function display(jsUrl, endpoints) {
     copyBtn.className = "copy-btn";
     copyBtn.title = "Copy";
 
-    copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(endpoint);
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(endpoint);
+      } catch {
+        // Fallback for older browsers/non-HTTPS
+        const ta = document.createElement("textarea");
+        ta.value = endpoint;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
       copyBtn.classList.add("copied");
       setTimeout(() => {
         copyBtn.classList.remove("copied");
@@ -235,16 +284,8 @@ function display(jsUrl, endpoints) {
     list.appendChild(item);
   });
 
-  if (endpoints.length === 0) {
-    const fallback = document.createElement("pre");
-    fallback.innerText = "No endpoints found.";
-    container.appendChild(title);
-    container.appendChild(fallback);
-  } else {
-    container.appendChild(title);
-    container.appendChild(list);
-  }
-
+  container.appendChild(title);
+  container.appendChild(list);
   results.appendChild(container);
 }
 
@@ -265,14 +306,29 @@ function downloadFile(filename, content, type) {
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = filename;
+  document.body.appendChild(link);
   link.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(link.href);
+    document.body.removeChild(link);
+  }, 0);
 }
 
-// ✅ Universal Endpoint Filter on All Results
-document.getElementById("filterInput").addEventListener("input", function () {
-  const keyword = this.value.toLowerCase();
-  document.querySelectorAll(".endpoint-text").forEach((el) => {
-    const match = el.innerText.toLowerCase().includes(keyword);
-    el.parentElement.style.display = match ? "flex" : "none";
+// 🔍 Universal filter across JS & HTML (guard + hide empty cards)
+const filterInputEl = document.getElementById("filterInput");
+if (filterInputEl) {
+  filterInputEl.addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+    document.querySelectorAll(".endpoint-text").forEach((el) => {
+      const match = el.innerText.toLowerCase().includes(keyword);
+      el.parentElement.style.display = match ? "flex" : "none";
+    });
+    // Hide cards that have no visible list items
+    document.querySelectorAll(".card").forEach((card) => {
+      const items = card.querySelectorAll("ol li");
+      if (!items.length) return;
+      const anyVisible = Array.from(items).some(li => li.style.display !== "none");
+      card.style.display = anyVisible ? "" : "none";
+    });
   });
-});
+}
