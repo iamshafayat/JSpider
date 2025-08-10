@@ -45,7 +45,7 @@ All of this happens **instantly and completely in the browser** — no server, n
 | 🔎 **Scans External JS** | Parses and scans all `<script src="...">` files |
 | 📜 **Scans Inline JS** | Reads and parses inline `<script>...</script>` blocks |
 | 🌐 **Scans HTML Source** | Crawls `<a href>` and `<link href>` HTML tags |
-| 🎯 **Smart Filtering** | Removes static assets, media, social URLs & junk |
+| 🎯 **Smart Filtering** | Removes static files, known CDNs, invalid schemes and noise |
 | ✅ **100% Client-Side** | No backend, no data leakage |
 | 💡 **Minimal UI** | Clean, responsive glass-style interface |
 | 🔍 **Live Search Filter** | Quickly search extracted results |
