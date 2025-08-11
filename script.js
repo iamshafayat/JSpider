@@ -43,7 +43,7 @@ const externalDomainsToIgnore = [
   "optimizely.com", "hotjar.com", "segment.com", "intercom.io",
   "salesforce.com", "liveperson.net", "zendesk.com", "helix-rum-js",
   "sentry.io", "mixpanel.com", "disqus.com", "addthis.com", "sharethis.com", "criteo.com",
-  "tracking.", "pixel.", "collect.", "recaptcha.net"
+  "tracking.", "pixel.", "collect.", "recaptcha.net", "lazcdn.com", "alicdn.com"
 ];
 
 // BLOCK garbage prefixes like markup://, js://, aura://
@@ -332,3 +332,4 @@ if (filterInputEl) {
     });
   });
 }
+
