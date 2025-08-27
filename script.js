@@ -21,7 +21,7 @@ const excludedExtensions = [
   ".woff", ".woff2", ".ttf", ".otf", ".eot", ".sfnt",
   ".png", ".jpg", ".jpeg", ".svg", ".gif", ".ico", ".webp", ".bmp", ".apng", ".tif", ".tiff",
   ".css", ".less", ".sass",
-  ".map", ".json", ".txt",
+  ".map", ".txt",
   ".mp4", ".m4v", ".webm", ".mp3", ".wav", ".ogg", ".flac",
   ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".rtf",
   ".zip", ".rar", ".tar", ".gz", ".7z",
@@ -332,4 +332,5 @@ if (filterInputEl) {
     });
   });
 }
+
 
