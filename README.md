@@ -10,7 +10,7 @@
 **Built for recon - Fast, lightweight and 100% client-side.**
 
 [![Built with](https://img.shields.io/badge/Built%20with-HTML%20%7C%20CSS%20%7C%20JavaScript-blue?style=for-the-badge&logo=javascript)](https://iamshafayat.github.io/JSpider/)  
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](LICENSE)
 </div>
 
 ---
@@ -118,7 +118,7 @@ JSpider/
 ---
 
 ## 📝 License
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Apache License 2.0](LICENSE).
 
 -----------
 
