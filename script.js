@@ -26,7 +26,7 @@ const excludedExtensions = [
   ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".rtf",
   ".zip", ".rar", ".tar", ".gz", ".7z",
   ".exe", ".apk", ".ipa", ".dmg", ".bin", ".jar", ".class",
-  ".swf", ".log", ".tmp", ".bak", ".old"
+  ".swf", ".log", ".tmp", ".bak", ".old", ".drag", ".brush", ".zoom", ".time", ".name", ".width", ".calcs"
 ];
 
 // BLOCK garbage/tracker domains
@@ -332,5 +332,6 @@ if (filterInputEl) {
     });
   });
 }
+
 
 
