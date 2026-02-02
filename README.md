@@ -99,7 +99,7 @@ After scanning, click:
 - HTML5 & CSS3 (Glassmorphism UI)
 - Vanilla JavaScript (ES6+)
 - Advanced Regex
-- [corsproxy.io](https://corsproxy.io/) — CORS bypass for JS file access
+- Cloudflare Workers — Lightweight server-side proxy to bypass browser CORS limitations
 
 ---
 
