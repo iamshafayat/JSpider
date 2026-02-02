@@ -9,7 +9,30 @@ const exportJson = document.getElementById("exportJson");
 const allResults = [];
 const scannedJs = new Set(); // avoid duplicate scans across sources
 
-const proxyUrl = (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`;
+// Proxy function with two options
+const proxyUrl = (url, attempt = 0) => {
+  if (attempt === 0) {
+    return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  } else {
+    return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  }
+};
+
+// Smart fetch with retry logic
+async function smartFetch(url) {
+  try {
+    const response = await fetch(proxyUrl(url, 0));
+    if (!response.ok) throw new Error('First proxy failed');
+    const text = await response.text();
+    // Check if response is JSON (allorigins format) or plain text
+    return text.startsWith('{') ? JSON.parse(text).contents : text;
+  } catch {
+    // Fallback to second proxy
+    const response = await fetch(proxyUrl(url, 1));
+    const data = await response.json();
+    return data.contents;
+  }
+}
 
 const endpointRegex = new RegExp(
   `(?:"|')((?:[a-zA-Z]{1,10}://|//)[^"']*?|(?:/|\\./|\\.\\./)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
@@ -109,7 +132,7 @@ scanBtn.addEventListener("click", async () => {
 });
 
 async function fetchHtml(baseUrl) {
-  const res = await fetch(proxyUrl(baseUrl));
+  const html = await smartFetch(baseUrl);
   if (!res.ok) throw new Error("Failed to load HTML");
 
   const html = await res.text();
@@ -196,12 +219,7 @@ function extractJSUrls(html, baseUrl) {
 
 async function extractEndpointsFromJS(jsUrl) {
   try {
-    const res = await fetch(proxyUrl(jsUrl));
-    if (!res.ok) {
-      console.warn("Could not fetch (status " + res.status + "):", jsUrl);
-      return [];
-    }
-    const code = await res.text();
+    const code = await smartFetch(jsUrl);
     const matches = [...code.matchAll(endpointRegex)];
     const raw = matches.map(m => m[1]);
     const filtered = [...new Set(raw.filter(url => filterUrl(url)))];
@@ -332,6 +350,7 @@ if (filterInputEl) {
     });
   });
 }
+
 
 
 
