@@ -9,7 +9,7 @@ const exportJson = document.getElementById("exportJson");
 const allResults = [];
 const scannedJs = new Set(); // avoid duplicate scans across sources
 
-const proxyUrl = (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+const proxyUrl = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
 
 const endpointRegex = new RegExp(
   `(?:"|')((?:[a-zA-Z]{1,10}://|//)[^"']*?|(?:/|\\./|\\.\\./)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
