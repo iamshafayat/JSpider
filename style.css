@@ -17,9 +17,7 @@
   padding: 0;
 }
 
-html,
-body {
-  overflow-x: hidden;
+html {
   background-color: #0f2027;
   /* Dark fallback to prevent white flicker */
   height: 100%;
@@ -30,6 +28,9 @@ body {
   color: var(--main-text);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
+  background: transparent;
+  /* Ensure pseudo-element is visible */
 }
 
 body::before {
