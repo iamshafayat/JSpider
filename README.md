@@ -1,11 +1,11 @@
-# 🕷️ JSpider - Smart crawler for hidden endpoints
+# 🕷️ JSpider V2.0 - Advanced JavaScript Crawler & Endpoint Discovery
 ---
 
 <div align="center">
 
 ![JSpider Interface Screenshot](JSpider-screenshot.png)
 
-**Crawl and extract hidden API endpoints and URLs from JavaScript files and HTML source code — directly in your browser.**
+**The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive parameters, and hardcoded secrets instantly from any website.**
 
 **Built for recon - Fast, lightweight and 100% client-side.**
 
@@ -17,111 +17,93 @@
 
 ## 🌐 Live
 
-👉 Try JSpider now:  
+👉 Try JSpider V2.0 now:  
 **[https://iamshafayat.github.io/JSpider/](https://iamshafayat.github.io/JSpider/)**
+
+---
+
+## 🚀 Major Updates (V2.0)
+JSpider V2.0 is a massive evolution, transforming from a simple scraper into a proactive reconnaissance suite.
+
+### ✨ Key Features:
+- **Sensitive Path Prober**: Automated checks for **500+ critical paths** including `.env`, `.git/config`, `phpinfo.php`, backups, and cloud configurations.
+- **Parameter Discovery**: Dedicated extraction and grouping of URL parameters to identify potential injection points.
+- **Recursive Discovery Engine**: Full website crawling capability (Depth 1) with deep script analysis to find hidden routes.
+- **Precision Secret Detection**: Hardened regex for AWS Keys, Google Cloud, GitHub, Slack, Discord, and JWT tokens.
+- **High-Fidelity Mapping**: Captures raw file paths and absolute URLs without truncation, preserving double slashes and complex structures.
 
 ---
 
 ## 📌 What is JSpider?
 
-**JSpider** is a security-oriented frontend tool designed for:
-- 🔍 Endpoint discovery
-- 🕷️ Reconnaissance
-- 🧩 Reverse engineering of client-side JS behavior
+**JSpider** is a powerful security reconnaissance tool designed for:
+- 🔍 **Endpoint Discovery**: Find hidden routes and API calls.
+- 🔑 **Secret Detection**: Automatically identify API keys, tokens, and sensitive data.
+- 🕷️ **Recursive Crawling**: Deeper discovery by following same-domain links.
+- 🧩 **Reverse Engineering**: Analyze client-side behavior and dynamic URLs.
 
-It helps you **find hidden routes, API calls, file references, and dynamic URLs** embedded in:
-- External JavaScript files
-- Inline `<script>` content
-- Static HTML tags like `<a href>` and `<link href>`
-
-All of this happens **instantly and completely in the browser** — no server, no data sent out.
+It extracts data from external JS files, inline scripts, and HTML source code - instantly and completely in your browser.
 
 ---
 
-## ✨ Features
+## ✨ Advanced Features
 
-| Type | Description |
+| Feature | Description |
 |------|-------------|
-| 🔎 **Scans External JS** | Parses and scans all `<script src="...">` files |
-| 📜 **Scans Inline JS** | Reads and parses inline `<script>...</script>` blocks |
-| 🌐 **Scans HTML Source** | Crawls `<a href>` and `<link href>` HTML tags |
-| 🎯 **Smart Filtering** | Removes static files, known CDNs, invalid schemes and noise |
-| ✅ **100% Client-Side** | No backend, no data leakage |
-| 💡 **Minimal UI** | Clean, responsive glass-style interface |
-| 🔍 **Live Search Filter** | Quickly search extracted results |
-| 📄 **Export Options** | Export to `.txt` or `.json` formats |
-| 📋 **Copy Button** | One-click copy of each endpoint |
+| 🔑 **Secret Detection** | Detects AWS, Google, GitHub tokens, Bearer tokens, and more. |
+| 🕷️ **Recursive Scan** | Depth-limited (v2.0: Depth 1) crawling of internal links. |
+| 📊 **Real-time Stats** | Live dashboard tracking Scanned URLs, Endpoints, Secrets, and Files. |
+| 🛡️ **Path Prober** | Manual check for 500+ sensitive files with live status code reporting. |
+| 🎯 **Result Filtering** | Instantly sort findings into Endpoints, Secrets, and Files with a global filter. |
+| 📄 **Advanced Export** | Export to `.txt`, `.json`, `.csv`, and professional `.md` reports. |
+| ✅ **100% Client-Side** | No backend, no data leakage - privacy-focused by design. |
 
 ---
 
-## 🚫 What JSpider Filters Out (Noise Protection)
+## 🚫 Noise Protection (Smart Filtering)
 
-By default, JSpider will **exclude** the following from all sources:
-- Static assets: `*.png`, `*.css`, `*.woff`, `*.svg`, etc.
-- Social platforms: `facebook.com`, `instagram.com`, `tiktok.com`, etc.
-- Analytics/trackers: `google.com`, `google-analytics`, GTM, etc.
-- Inline `base64`, overly long or misleading strings
-
-This keeps your results focused and free of clutter.
+JSpider automatically excludes architectural noise to focus on valuable recon:
+- **Static Assets**: Blocks `*.png`, `*.css`, `*.woff`, `*.svg`, etc.
+- **Social & Analytics**: Filters LinkedIn, Facebook, Google Analytics, GTM, etc.
+- **Known CDNs**: Ignores common libraries from jsDelivr, cdnjs, unpkg, etc.
+- **Invalid Prefixes**: Excludes `data:`, `blob:`, `mailto:`, `tel:`, etc.
 
 ---
 
 ## 🧪 Usage Guide
 
+### 🕷️ Smart Crawler
 1. Visit **[https://iamshafayat.github.io/JSpider/](https://iamshafayat.github.io/JSpider/)**
+2. Enter a target URL (e.g., `https://example.com`).
+3. Click **Scan Page** for a quick analysis or **Full Scan** for recursive domain discovery.
+4. Monitor the **Dashboard** to see live extractions of Endpoints, Parameters, Secrets, and Files.
+5. Use the **Category Tabs** to filter results and the **Global Search** for specific keywords.
+6. **Export** your findings in `.txt`, `.json`, `.csv`, or `.md` formats.
 
-2. 🔗 Input a target domain:  
-   `https://example.com`
-
-3. 🔍 JSpider will:
-   - Download HTML
-   - Parse visible tags and JS
-   - Extract endpoints
-   - Present clean output in a grouped list
-
-4. ✅ You can:
-   - Search endpoints with a live filter box
-   - Copy individual entries
-   - Export data for deeper analysis
-
----
-
-## 📤 Exports
-
-After scanning, click:
-- `✅ Export .txt` → for simple endpoint lists
-- `📁 Export .json` → full structured results per source file
+### 🛡️ Sensitive Path Prober
+1. Switch to the **Sensitive Path Prober** tab from the header menu.
+2. Enter the target domain (e.g., `https://example.com`).
+3. Click **Check Paths** to start probing **500+ critical paths** (e.g., `.env`, `.git`, `phpinfo.php`).
+4. Watch the **Progress Bar** and live **Status Counters** (200, 403, 404).
+5. Use the **Status Filters** (Found, Forbidden, Missing) to analyze the detected paths.
+6. For `200 OK` results, use the **OPEN🔗** button to verify the leak directly.
 
 ---
 
 ## 🧰 Built With
 
-- HTML5 & CSS3 (Glassmorphism UI)
-- Vanilla JavaScript (ES6+)
-- Advanced Regex
-- Cloudflare Workers — Lightweight server-side proxy to bypass browser CORS limitations
-
----
-
-## 📁 Project Structure
-
-```bash
-JSpider/
-│
-├── index.html       # Main UI
-├── script.js        # Core JS scanning & logic
-├── style.css        # Design & layout
-├── favicon.png      # Icon
-├── README.md        # You're here!
-```
+- **Structure**: HTML5 & CSS3 (Advanced Glassmorphism UI)
+- **Logic**: Vanilla JavaScript (ES6+ / Async-Await)
+- **Engine**: High-Precision Regex Engine
+- **Proxy**: Cloudflare Workers (Lightweight Proxy for CORS bypass)
 
 ---
 
 ## 📝 License
 This project is licensed under the [Apache License 2.0](LICENSE).
 
------------
+---
 
 ## 👤 Author
-Made with ❤️ by [Shafayat Ahmed Alif](https://www.linkedin.com/in/iamshafayat/).
-Feel free to connect or suggest improvements.
+Made with ❤️ by [Shafayat Ahmed Alif](https://www.linkedin.com/in/iamshafayat/).  
+*Feel free to connect or suggest improvements.*
