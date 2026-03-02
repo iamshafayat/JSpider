@@ -622,7 +622,7 @@ const normalizeUrl = (url) => {
   } catch { return url; }
 };
 
-const proxyUrl = (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+const proxyUrl = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
 
 const endpointRegex = new RegExp(
   `(?:"|')((?:[a-zA-Z]{1,10}:\\/\\/|\\/\\/)[^"']*?|(?:\\/|\\.\\/|\\.\\.\\/)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
@@ -1019,7 +1019,7 @@ probeBtn.onclick = async () => {
       // Ensure path starts with / but origin doesn't end with it
       const cleanPath = path.startsWith("/") ? path : "/" + path;
       const fullUrl = origin + cleanPath;
-      const proxyUrlWithTarget = `https://corsproxy.io/?url=${encodeURIComponent(fullUrl)}`;
+      const proxyUrlWithTarget = `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
 
       try {
         const res = await fetch(proxyUrlWithTarget, { method: 'GET' }); // GET to see content if needed
@@ -1266,3 +1266,4 @@ function downloadFile(filename, content, type) {
     document.body.removeChild(link);
   }, 0);
 }
+
