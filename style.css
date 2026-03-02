@@ -22,6 +22,7 @@ body {
   overflow-x: hidden;
   background-color: #0f2027;
   /* Dark fallback to prevent white flicker */
+  height: 100%;
 }
 
 body {
@@ -34,15 +35,32 @@ body {
 body::before {
   content: "";
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: -5%;
+  /* Overscan to prevent flicker on top/bottom */
+  left: -5%;
+  width: 110%;
+  height: 110%;
   background: var(--bg-gradient);
+  background-size: 400% 400%;
+  animation: animateBackground 15s ease infinite;
   z-index: -1;
   pointer-events: none;
   transform: translateZ(0);
   /* GPU acceleration for background */
+}
+
+@keyframes animateBackground {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .wrapper {
