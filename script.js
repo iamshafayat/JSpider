@@ -8,13 +8,645 @@ const exportJson = document.getElementById("exportJson");
 
 const allResults = [];
 const scannedJs = new Set(); // avoid duplicate scans across sources
+console.log("%c🕷️ JSpider V2.0 Initialized", "color: #0dcaf0; font-weight: bold; font-size: 1.2rem;");
 
-const proxyUrl = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
+const sensitivePaths = [
+  // 🌐 Standard .well-known files
+  '/.well-known/security.txt',
+  '/.well-known/assetlinks.json',
+  '/.well-known/apple-app-site-association',
+  '/.well-known/openid-configuration',
+  '/.well-known/oauth-authorization-server',
+  '/.well-known/jwks.json',
+  '/.well-known/jwks',
+  '/.well-known/change-password',
+  '/.well-known/dnt-policy.txt',
+  '/.well-known/privacy-policy.txt',
+  '/.well-known/terms-of-service.txt',
+  '/.well-known/gpc.json',
+  '/.well-known/webfinger',
+  '/.well-known/ai-plugin.json',
+  '/.well-known/csaf/provider-metadata.json',
+  '/.well-known/nodeinfo',
+  '/.well-known/trust.txt',
+  '/.well-known/recovery',
+  '/.well-known/host-meta',
+  '/.well-known/apple-developer-merchantid-domain-association',
+  '/.well-known/microsoft-identity-association.json',
+  '/.well-known/pay',
+  '/.well-known/acme-challenge',
+  '/.well-known/smart-app-banner',
+  '/.well-known/matrix/client',
+  '/.well-known/matrix/server',
+  '/.well-known/did.json',
+  '/.well-known/stellar.toml',
+  '/.well-known/mta-sts.txt',
+  '/.well-known/bugbounty',
+  '/.well-known/humans.txt',
+
+  // 🧭 Common metadata & index files
+  '/robots.txt',
+  '/humans.txt',
+  '/sitemap.xml',
+  '/sitemap_index.xml',
+  '/manifest.json',
+  '/ads.txt',
+  '/app-ads.txt',
+  '/crossdomain.xml',
+  '/security.txt',
+  '/server-status',
+  '/server-info',
+  '/status',
+  '/health',
+  '/healthcheck',
+  '/ping',
+  '/ready',
+  '/live',
+
+  // 🗂️ Version Control & Source Code
+  '/.git/config',
+  '/.git/HEAD',
+  '/.git/index',
+  '/.git/logs/HEAD',
+  '/.gitignore',
+  '/.gitconfig',
+  '/.gitmodules',
+  '/.git-credentials',
+  '/.svn/entries',
+  '/.svn/wc.db',
+  '/.hg/requires',
+  '/.bzr/branch/branch.conf',
+  '/CVS/Root',
+  '/CVS/Entries',
+
+  // 💾 Backups & Database Files
+  '/backup.sql',
+  '/backup.sql.gz',
+  '/backup.zip',
+  '/backup.tar.gz',
+  '/backup.7z',
+  '/backup.bak',
+  '/backup.old',
+  '/backup.rar',
+  '/db.sql',
+  '/db.sql.gz',
+  '/dump.sql',
+  '/database.sql',
+  '/db_backup.sql',
+  '/mysql.sql',
+  '/mysqldump.sql',
+  '/site.sql',
+  '/data.sql',
+  '/1.sql',
+  '/1.sql.gz',
+  '/2.sql',
+  '/latest.sql',
+  '/dbdump.sql',
+  '/sqldump.sql',
+  '/export.sql',
+  '/backup-db.sql',
+  '/database_backup.sql',
+  '/www.sql',
+  '/backup/',
+  '/backups/',
+  '/.backup',
+  '/old/',
+  '/old.zip',
+  '/temp/',
+  '/tmp/',
+  '/site.zip',
+  '/site.tar',
+  '/site.tar.gz',
+  '/www.zip',
+  '/www.tar.gz',
+  '/public.zip',
+  '/public.tar.gz',
+  '/public_html.zip',
+  '/web.zip',
+  '/web.tar.gz',
+  '/website.zip',
+  '/httpdocs.zip',
+  '/html.zip',
+
+  // 🔑 Configuration & Environment Files
+  '/.env',
+  '/.env.local',
+  '/.env.production',
+  '/.env.production.local',
+  '/.env.dev',
+  '/.env.development',
+  '/.env.development.local',
+  '/.env.staging',
+  '/.env.backup',
+  '/.env.old',
+  '/.env.save',
+  '/.env.example',
+  '/.env.php',
+  '/env',
+  '/env.sample',
+  '/example.env',
+  '/config',
+  '/config.json',
+  '/config.php',
+  '/config.yml',
+  '/config.yaml',
+  '/config.inc.php',
+  '/config.inc',
+  '/config.php.bak',
+  '/configuration.php',
+  '/configuration.php-dist',
+  '/settings.php',
+  '/settings.json',
+  '/settings.py',
+  '/local_settings.py',
+  '/app/config/parameters.yml',
+  '/application/config/database.php',
+  '/api/config',
+  '/web.config',
+  '/Web.config',
+  '/wp-config.php',
+  '/wp-config.php.bak',
+  '/wp-config.old',
+  '/db.php',
+  '/database.php',
+  '/database.yml',
+  '/appsettings.json',
+  '/appsettings.production.json',
+  '/appsettings.Development.json',
+  '/secrets.yml',
+  '/credentials.json',
+  '/config/database.yml',
+  '/config/secrets.yml',
+  '/config/master.key',
+  '/config/credentials.yml.enc',
+  '/php.ini',
+  '/.user.ini',
+  '/php-fpm.conf',
+
+  // 🚨 CRITICAL - API Keys & Secrets
+  '/sftp-config.json',
+  '/ftpsync.settings',
+  '/.ftpconfig',
+  '/deployment-config.json',
+  '/.vscode/sftp.json',
+  '/privatekey.pem',
+  '/server.key',
+  '/server.crt',
+  '/cert.pem',
+  '/key.pem',
+  '/ssl/private.key',
+  '/.pgpass',
+  '/.netrc',
+  '/token.txt',
+  '/access_token',
+  '/api_key.txt',
+  '/api-keys.txt',
+  '/auth.json',
+  '/oauth.json',
+  '/client_secret.json',
+  '/firebase-adminsdk.json',
+  '/.google_authenticator',
+  '/2fa-recovery-codes.txt',
+  '/backup-codes.txt',
+  '/proftpdpasswd',
+  '/.my.cnf',
+  '/mysql_history',
+  '/.psql_history',
+
+  // 🔐 Cloud Provider Credentials
+  '/.aws/credentials',
+  '/.aws/config',
+  '/credentials',
+  '/service-account-key.json',
+  '/.azure/credentials',
+  '/.azure-credentials',
+  '/.config/gcloud/credentials.db',
+  '/gcp-key.json',
+  '/firebase-config.json',
+  '/.s3cfg',
+  '/.rclone.conf',
+  '/rclone.conf',
+  '/.boto',
+  '/s3.yml',
+  '/.kube/config',
+  '/kubeconfig',
+  '/.docker/config.json',
+  '/aws.json',
+  '/google-services.json',
+  '/GoogleService-Info.plist',
+
+  // 🐳 Docker & Container Files
+  '/Dockerfile',
+  '/docker-compose.yml',
+  '/docker-compose.yaml',
+  '/.dockerignore',
+  '/.docker/',
+  '/docker-compose.override.yml',
+  '/docker-compose.prod.yml',
+
+  // 📦 Package Manager Files
+  '/package.json',
+  '/package-lock.json',
+  '/yarn.lock',
+  '/composer.json',
+  '/composer.lock',
+  '/Gemfile',
+  '/Gemfile.lock',
+  '/Pipfile',
+  '/Pipfile.lock',
+  '/requirements.txt',
+  '/pom.xml',
+  '/build.gradle',
+  '/go.mod',
+  '/go.sum',
+  '/.npmrc',
+  '/.yarnrc',
+  '/pnpm-lock.yaml',
+
+  // 📝 Log Files
+  '/error_log',
+  '/error.log',
+  '/errors.log',
+  '/access.log',
+  '/access_log',
+  '/debug.log',
+  '/production.log',
+  '/app.log',
+  '/application.log',
+  '/server.log',
+  '/npm-debug.log',
+  '/yarn-error.log',
+  '/php_errors.log',
+  '/laravel.log',
+  '/storage/logs/laravel.log',
+  '/storage/logs/',
+  '/log/development.log',
+  '/log/production.log',
+  '/logs/error.log',
+  '/var/log/',
+
+  // 🔧 Server & Application Info
+  '/phpinfo.php',
+  '/info.php',
+  '/test.php',
+  '/php.php',
+  '/version',
+  '/version.txt',
+  '/version.json',
+  '/VERSION',
+  '/CHANGELOG.md',
+  '/CHANGELOG.txt',
+  '/api/version',
+  '/api/info',
+  '/api/v1/info',
+  '/api/swagger.json',
+  '/api/swagger.yaml',
+  '/api/swagger',
+  '/api/docs',
+  '/api.json',
+  '/api.yaml',
+  '/api/openapi.json',
+  '/api-docs',
+  '/swagger.json',
+  '/swagger.yaml',
+  '/swagger-ui.html',
+  '/v2/api-docs',
+  '/openapi.json',
+  '/openapi.yaml',
+  '/redoc',
+  '/docs.json',
+  '/schema.json',
+  '/wsdl',
+  '/wadl',
+
+  // 🎯 GraphQL Endpoints
+  '/graphql',
+  '/graphiql',
+  '/playground',
+  '/api/graphql',
+  '/__graphql',
+  '/graphql/console',
+  '/v1/graphql',
+  '/graphql/v1',
+  '/query',
+  '/graphql?query={__schema{types{name}}}',
+
+  // 🛡️ Admin & Control Panels
+  '/admin',
+  '/admin/',
+  '/admin/login',
+  '/administrator',
+  '/admin.php',
+  '/admin/index.php',
+  '/admin/config.php',
+  '/wp-admin/',
+  '/phpmyadmin/',
+  '/phpmyadmin/index.php',
+  '/pma/',
+  '/mysql/',
+  '/dbadmin/',
+  '/adminer.php',
+  '/adminer/',
+  '/cpanel',
+  '/cPanel',
+  '/plesk',
+  '/webadmin',
+  '/controlpanel',
+  '/management',
+  '/manage',
+  '/console',
+  '/dashboard',
+  '/portal',
+
+  // 📊 Monitoring & Metrics
+  '/metrics',
+  '/actuator',
+  '/actuator/health',
+  '/actuator/env',
+  '/actuator/metrics',
+  '/actuator/mappings',
+  '/actuator/configprops',
+  '/actuator/dump',
+  '/actuator/heapdump',
+  '/actuator/trace',
+  '/actuator/logfile',
+  '/jolokia',
+  '/hawtio',
+  '/prometheus',
+  '/debug/pprof',
+  '/debug/vars',
+  '/_stats',
+  '/_status',
+  '/_health',
+
+  // 🗄️ Directory Listings & Indexes
+  '/uploads/',
+  '/images/',
+  '/files/',
+  '/download/',
+  '/downloads/',
+  '/media/',
+  '/assets/',
+  '/static/',
+  '/public/',
+  '/storage/',
+  '/data/',
+  '/documents/',
+  '/attachments/',
+
+  // 🧪 Test & Development Files
+  '/test',
+  '/test.php',
+  '/test.html',
+  '/testing',
+  '/dev',
+  '/development',
+  '/debug',
+  '/demo',
+  '/example',
+  '/examples',
+  '/sample',
+  '/samples',
+  '/temp.php',
+  '/tmp.php',
+  '/1.php',
+  '/shell.php',
+  '/upload.php',
+
+  // 📄 Documentation & README
+  '/readme.md',
+  '/README.md',
+  '/README.txt',
+  '/README',
+  '/license',
+  '/LICENSE',
+  '/LICENSE.txt',
+  '/INSTALL.txt',
+  '/INSTALL.md',
+  '/CONTRIBUTING.md',
+  '/docs/',
+  '/documentation/',
+  '/help/',
+
+  // 🌍 CMS Specific (WordPress, Joomla, Drupal)
+  '/wp-config.php',
+  '/wp-content/debug.log',
+  '/wp-json/wp/v2/users',
+  '/wp-includes/',
+  '/xmlrpc.php',
+  '/wp-login.php',
+  '/license.txt',
+  '/readme.html',
+  '/configuration.php',
+  '/administrator/manifests/files/joomla.xml',
+  '/user/login',
+  '/install.php',
+  '/install/',
+  '/setup/',
+  '/sites/default/settings.php',
+  '/app/etc/local.xml',
+  '/app/etc/env.php',
+  '/.maintenance',
+
+  // 🔍 Miscellaneous Sensitive Files
+  '/favicon.ico',
+  '/.htaccess',
+  '/.htpasswd',
+  '/Thumbs.db',
+  '/.bashrc',
+  '/.bash_history',
+  '/.bash_profile',
+  '/.ssh/id_rsa',
+  '/.ssh/id_dsa',
+  '/.ssh/id_ecdsa',
+  '/.ssh/id_ed25519',
+  '/.ssh/known_hosts',
+  '/.ssh/authorized_keys',
+  '/id_rsa',
+  '/id_rsa.pub',
+  '/id_dsa',
+  '/privatekey',
+  '/mykey.pem',
+  '/prod.key',
+  '/production.key',
+  '/staging.key',
+  '/.DS_Store',
+  '/.idea/',
+  '/.vscode/',
+  '/nbproject/',
+  '/.project',
+  '/.classpath',
+  '/.settings/',
+
+  // 🔓 Common Vulnerable Endpoints
+  '/cgi-bin/',
+  '/index.php.bak',
+  '/.listing',
+  '/.perf',
+  '/core',
+  '/.core',
+  '/WEB-INF/web.xml',
+  '/META-INF/MANIFEST.MF',
+
+  // 🏗️ CI/CD & Infrastructure as Code
+  '/.travis.yml',
+  '/.gitlab-ci.yml',
+  '/gitlab-ci.yml',
+  '/.circleci/config.yml',
+  '/Jenkinsfile',
+  '/.drone.yml',
+  '/.github/workflows/',
+  '/azure-pipelines.yml',
+  '/bitbucket-pipelines.yml',
+  '/cloudbuild.yaml',
+  '/buildspec.yml',
+  '/wercker.yml',
+  '/appveyor.yml',
+  '/codefresh.yml',
+  '/terraform.tfstate',
+  '/terraform.tfstate.backup',
+  '/terraform.tfvars',
+  '/.terraform/',
+  '/ansible.cfg',
+  '/inventory.ini',
+  '/hosts.yml',
+  '/playbook.yml',
+  '/Vagrantfile',
+  '/ansible/hosts',
+  '/pulumi.yaml',
+  '/cloudformation.json',
+  '/cloudformation.yaml',
+
+  // 🎫 Authentication & Session
+  '/api/auth/config',
+  '/oauth/token',
+  '/token',
+  '/oauth2/token',
+  '/login.json',
+  '/jwks',
+  '/auth/jwks',
+  '/auth/realms/master/.well-known/openid-configuration',
+  '/session.txt',
+  '/sess_*',
+  '/redis.conf',
+  '/memcached.conf',
+  '/.redis',
+
+  // 🔍 Source Maps (leak source code)
+  '/main.js.map',
+  '/app.js.map',
+  '/bundle.js.map',
+  '/vendor.js.map',
+  '/index.js.map',
+  '/app.css.map',
+
+  // 📱 Mobile & App Configs
+  '/app.json',
+  '/eas.json',
+  '/config.codekit',
+  '/sftp.json',
+
+  // 🔧 Framework Specific
+  '/bootstrap.php',
+  '/autoload.php',
+  '/vendor/autoload.php',
+  '/application.properties',
+  '/application.yml',
+
+  // 💀 Shell & Backdoors (common names)
+  '/c99.php',
+  '/r57.php',
+  '/webshell.php',
+  '/backdoor.php',
+  '/cmd.php',
+  '/uploader.php',
+  '/up.php',
+  '/ajax.php',
+
+  // 🔐 SAML & SSO
+  '/saml/metadata',
+  '/simplesaml/',
+  '/sso/metadata',
+  '/FederationMetadata/2007-06/FederationMetadata.xml',
+
+  // 📧 Email & SMTP
+  '/email.txt',
+  '/smtp.txt',
+  '/mail.php',
+  '/sendmail.php',
+  '/mailer.php',
+  '/mailconfig.json',
+
+  // 📊 Analytics & Tracking
+  '/analytics.js',
+  '/_tracking',
+  '/tracking.js',
+  '/pixel',
+
+  // 🔎 Information Disclosure (.NET, Symfony, Laravel)
+  '/elmah.axd',
+  '/trace.axd',
+  '/glimpse.axd',
+  '/_profiler',
+  '/_profiler/phpinfo',
+  '/telescope',
+  '/horizon/dashboard',
+  '/__webpack_hmr',
+
+  // 🌐 CDN & Asset Configs
+  '/cdn.yml',
+  '/cdn.json',
+  '/s3_website.yml',
+
+  // 🎯 API Discovery
+  '/api/health',
+  '/api/debug',
+  '/api/settings',
+  '/api/users',
+  '/api/v1/users',
+  '/api/admin',
+  '/rest/api/2/serverInfo',
+  '/api/now/table/sys_user',
+
+  // 🛡️ Bug Bounty & Security
+  '/bugbounty',
+  '/security',
+  '/responsible-disclosure',
+  '/hall-of-fame',
+];
+
+const normalizeUrl = (url) => {
+  try {
+    const u = new URL(url);
+    return u.origin + u.pathname.replace(/\/+$/, "") + u.search;
+  } catch { return url; }
+};
+
+const proxyUrl = (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
 
 const endpointRegex = new RegExp(
-  `(?:"|')((?:[a-zA-Z]{1,10}://|//)[^"']*?|(?:/|\\./|\\.\\./)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
+  `(?:"|')((?:[a-zA-Z]{1,10}:\\/\\/|\\/\\/)[^"']*?|(?:\\/|\\.\\/|\\.\\.\\/)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
   "g"
 );
+
+// Advanced Secret Detection Patterns
+const secretPatterns = {
+  "AWS Access Key": /([^A-Z0-9](?:AKIA|ASIA)[A-Z0-9]{16}[^A-Z0-9])/g,
+  "AWS Secret Key": /((?:[^A-Za-z0-9/+=]|^)[A-Za-z0-9/+=]{40}(?:[^A-Za-z0-9/+=]|$))/g,
+  "Google API Key": /AIza[0-9A-Za-z-_]{35}/g,
+  "Firebase URL": /[a-z0-9.-]+\.firebaseio\.com/g,
+  "Bearer Token": /Bearer\s+[A-Za-z0-9-_=]{10,}/g, // Catch eyJ... and other bearer tokens
+  "GitHub Token": /gh[pous]_[a-zA-Z0-9]{36}/g,
+  "Slack Webhook": /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/g,
+  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g,
+  "Generic Secret": /\b(?:key|api|token|secret|auth|password|pwd)\b(?:\s*[:=]\s*["']?)([a-zA-Z0-9\-_]{16,})/gi
+};
+
+const blockedSecretKeywords = [
+  "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
+  "module.exports", "prototype", "constructor", "__proto__",
+  "invalidExplanation", "DATE_MED", "TIME_WITH", "DATETIME_", "TIME_24"
+];
 
 // BLOCK garbage resource extensions
 const excludedExtensions = [
@@ -54,162 +686,444 @@ const disallowedPrefixes = [
   "intent://", "chrome-extension://", "about:", "chrome://"
 ];
 
-scanBtn.addEventListener("click", async () => {
-  let siteUrl = urlInput.value.trim();
-  if (!siteUrl) {
-    alert("Enter a valid full URL (e.g., https://example.com)");
-    return;
-  }
-  if (!/^https?:\/\//i.test(siteUrl)) {
-    siteUrl = "https://" + siteUrl; // auto-HTTPS for convenience
-  }
+// Global State
+const state = {
+  scanned: 0,
+  endpoints: new Set(),
+  secrets: new Set(),
+  files: new Set(),
+  parameters: new Set(),
+  allData: [], // { source, type, value, line }
+  scannedUrls: new Set(),
+  probedDomains: new Set(),
+  isScanning: false
+};
 
-  scanBtn.disabled = true;
+const updateStats = () => {
+  document.getElementById("stat-scanned").innerText = state.scanned;
+  document.getElementById("stat-endpoints").innerText = state.endpoints.size;
+  document.getElementById("stat-secrets").innerText = state.secrets.size;
+  document.getElementById("stat-files").innerText = state.files.size;
+  document.getElementById("stat-parameters").innerText = state.parameters.size;
+};
+
+const addResult = (source, type, value, line = 0) => {
+  // Deduplicate same value at same line in same source ONLY if type is also the same
+  if (state.allData.some(d => d.source === source && d.value === value && d.line === line && d.type === type)) return;
+
+  state.allData.push({ source, type, value, line });
+  if (type === "endpoint") state.endpoints.add(value);
+  if (type === "secret") state.secrets.add(value);
+  if (type === "file") state.files.add(value);
+  if (type === "parameter") state.parameters.add(value);
+  updateStats();
+};
+
+const setProgress = (percent) => {
+  document.getElementById("progress-bar").style.width = `${percent}%`;
+};
+
+const startScan = async (maxDepth) => {
+  let siteUrl = urlInput.value.trim();
+  if (!siteUrl) return alert("Enter a valid URL");
+  if (!/^https?:\/\//i.test(siteUrl)) siteUrl = "https://" + siteUrl;
+  siteUrl = normalizeUrl(siteUrl);
+
+  state.scanned = 0;
+  state.endpoints.clear();
+  state.secrets.clear();
+  state.files.clear();
+  state.parameters.clear();
+  state.allData = [];
+  state.scannedUrls.clear();
+  scannedJs.clear(); // Reset JS scan cache
+  updateStats();
+
   results.innerHTML = "";
-  status.innerText = "Fetching site...";
-  allResults.length = 0;
-  scannedJs.clear();
+  scanBtn.disabled = true;
+  document.getElementById("fullScanBtn").disabled = true;
+  document.getElementById("progress-container").style.display = "block";
+  document.getElementById("filter-section").style.display = "none";
   exportActions.style.display = "none";
+  status.innerText = maxDepth === 0 ? "Scanning single page..." : "Starting full recursive scan...";
+  setProgress(5);
 
   try {
-    const html = await fetchHtml(siteUrl);
-    const jsFiles = extractJSUrls(html, siteUrl);
-
-    // Full parallel scan (no limit)
-    let completed = 0;
-    await Promise.all(
-      jsFiles.map(async (jsUrl) => {
-        if (scannedJs.has(jsUrl)) return;
-        scannedJs.add(jsUrl);
-
-        status.innerText = `Scanning: ${jsUrl}`;
-        const endpoints = await extractEndpointsFromJS(jsUrl);
-        allResults.push({ jsUrl, endpoints });
-        display(jsUrl, endpoints);
-        completed++;
-        status.innerText = `Scanned ${completed}/${jsFiles.length}`;
-      })
-    );
-
+    await recursiveScan(siteUrl, maxDepth);
     status.innerText = "Scan complete!";
-    exportActions.style.display = allResults.length ? "flex" : "none";
-
-    const filterSection = document.getElementById("filter-section");
-    const filterInput = document.getElementById("filterInput");
-    if (filterSection && filterInput) {
-      filterSection.style.display = "block";
-      filterInput.value = "";
-    }
+    setProgress(100);
+    document.getElementById("filter-section").style.display = "block";
+    exportActions.style.display = "flex";
+    renderResults();
   } catch (e) {
     console.error(e);
-    status.innerText = "Error occurred. Try another URL.";
+    status.innerText = "Scan failed. Check console.";
   }
-
   scanBtn.disabled = false;
-});
+  document.getElementById("fullScanBtn").disabled = false;
+};
 
-async function fetchHtml(baseUrl) {
-  const res = await fetch(proxyUrl(baseUrl));
-  if (!res.ok) throw new Error("Failed to load HTML");
+scanBtn.addEventListener("click", () => startScan(0));
+document.getElementById("fullScanBtn").addEventListener("click", () => startScan(1));
 
-  const html = await res.text();
-  const rawHtmlTargets = [];
+async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null) {
+  const normUrl = normalizeUrl(url);
+  try {
+    const currentUrlObj = new URL(normUrl);
+    if (!targetHost) targetHost = currentUrlObj.hostname;
 
-  const hrefMatches = [...html.matchAll(/<(a|link)[^>]+href=["']([^"']+)["']/gi)];
-  rawHtmlTargets.push(...hrefMatches.map(m => m[2]));
-
-  const scriptContentMatches = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)];
-  scriptContentMatches.forEach(match => {
-    const inlineCode = match[1] || "";
-    const inlineEndpoints = [...inlineCode.matchAll(endpointRegex)]
-      .map(m => m[1])
-      .filter(url => filterUrl(url));
-    rawHtmlTargets.push(...inlineEndpoints);
-  });
-
-  const filteredHtmlLinks = [];
-  const jsToScanFromLinks = [];
-
-  rawHtmlTargets.forEach(link => {
-    if (!link) return;
-    const lowered = link.toLowerCase();
-    const isFull = lowered.startsWith("http://") || lowered.startsWith("https://");
-    const isJsOrJson = lowered.endsWith(".js") || lowered.endsWith(".json");
-
-    if (!isFull && isJsOrJson) {
-      try {
-        const fullUrl = new URL(link, baseUrl).href;
-        jsToScanFromLinks.push(fullUrl);
-      } catch {}
+    if (currentUrlObj.hostname !== targetHost && !currentUrlObj.hostname.endsWith("." + targetHost)) {
       return;
     }
 
-    if (filterUrl(lowered)) {
-      filteredHtmlLinks.push(link);
+    if (currentDepth > maxDepth || state.scannedUrls.has(normUrl)) return;
+    state.scannedUrls.add(normUrl);
+    state.scanned++;
+    updateStats();
+
+    status.innerText = `Scanning: ${normUrl}`;
+    setProgress(Math.min(95, (state.scanned / 15) * 100));
+
+    const res = await fetch(proxyUrl(normUrl));
+    if (!res.ok) return;
+    const content = await res.text();
+
+    // Extract data with line numbers
+    const foundEndpoints = extractEndpointsWithLines(content);
+    const foundSecrets = extractSecretsWithLines(content);
+    const foundFiles = extractFilesWithLines(content);
+
+    foundEndpoints.forEach(e => {
+      addResult(normUrl, "endpoint", e.value, e.line);
+      // Sync - if endpoint looks like a file, add it to files tab too
+      if (isInterestingFile(e.value)) {
+        addResult(normUrl, "file", e.value, e.line);
+      }
+      // Parameter Discovery (Full endpoint with query)
+      if (e.value.includes("?")) {
+        addResult(normUrl, "parameter", e.value, e.line);
+      }
+    });
+
+    foundSecrets.forEach(s => addResult(normUrl, "secret", s.value, s.line));
+
+    foundFiles.forEach(f => {
+      addResult(normUrl, "file", f.value, f.line);
+    });
+
+    // Discover more links/scripts
+    const links = extractInternalLinks(content, normUrl);
+    const scripts = extractScriptUrls(content, normUrl);
+
+    for (const script of scripts) {
+      await recursiveScan(script, maxDepth, currentDepth, targetHost);
+    }
+
+    if (currentDepth < maxDepth) {
+      for (const link of links) {
+        await recursiveScan(link, maxDepth, currentDepth + 1, targetHost);
+      }
+    }
+  } catch (e) {
+    console.warn(`Failed to scan ${normUrl}:`, e);
+  }
+}
+
+function getLineNumber(content, index) {
+  return content.substring(0, index).split("\n").length;
+}
+
+function extractEndpointsWithLines(content) {
+  const matches = [...content.matchAll(endpointRegex)];
+  return matches.map(m => ({
+    value: m[1],
+    line: getLineNumber(content, m.index)
+  })).filter(e => {
+    // Filter out Webhooks from standard endpoints so they show as Secrets (Warning color)
+    if (e.value.includes("hooks.slack.com") || e.value.includes("discord.com/api/webhooks")) return false;
+    return filterUrl(e.value);
+  });
+}
+
+function extractSecretsWithLines(content) {
+  const found = [];
+  for (const [name, regex] of Object.entries(secretPatterns)) {
+    const matches = [...content.matchAll(regex)];
+    matches.forEach(m => {
+      let rawMatch = m[0];
+      let val = rawMatch.trim();
+
+      // AWS Hardening: Extract middle 40 chars if it was wrapped by delimiters
+      if (name === "AWS Secret Key") {
+        const cleaned = rawMatch.match(/[A-Za-z0-9/+=]{40}/);
+        if (!cleaned) return;
+        val = cleaned[0];
+
+        // Anti-JS-Property Filter: If preceded by '.', it's a JS property/method
+        const preChar = rawMatch.charAt(0);
+        if (preChar === '.' || content.charAt(m.index - 1) === '.') return;
+
+        // Entropy/Variety Check: AWS keys usually have symbols / or + and mixed case
+        // Function names like 'concatTransformMotionEffectCSSProperties' are alphabetical only
+        if (!/[/+=]/.test(val) && !(/[a-z]/.test(val) && /[A-Z]/.test(val) && /[0-9]/.test(val))) return;
+
+        // Common JS suffixes that indicate a function name
+        const jsSuffixes = ["Properties", "Elements", "Prototype", "Animation", "Listener", "Container"];
+        if (jsSuffixes.some(s => val.includes(s))) return;
+      } else {
+        val = (m[1] || m[0]).trim();
+      }
+
+      // Anti-URL & False Positive Filter
+      if (val.includes("/") && val.split("/").length > 3) return;
+      if (blockedSecretKeywords.some(bk => val.includes(bk))) return;
+      if (val.length < 8 || val.length > 128) return;
+
+      found.push({
+        value: `${name}: ${val}`,
+        line: getLineNumber(content, m.index)
+      });
+    });
+  }
+  return found;
+}
+
+function extractFilesWithLines(content) {
+  // Path-Fidelity File Detection - Updated to prioritize absolute URLs and avoid internal protocol truncation
+  const fileRegex = /((?:https?:\/\/|(?<=["']))[^"'\s<>]*\.(?:json|xml|config|env|yaml|yml|sql|db|bak|zip|tar|gz|7z|pdf|doc|docx|js|html|php|asp|aspx|jsp|txt)(?:\?[^"'\s]*)?)(?:["'\s]|$)/gi;
+  const matches = [...content.matchAll(fileRegex)];
+
+  return matches.map(m => ({
+    value: m[1],
+    line: getLineNumber(content, m.index)
+  })).filter(f => {
+    if (!f.value || f.value.startsWith(".")) return false;
+    // Length check to avoid massive false positives
+    if (f.value.length < 4 || f.value.length > 250) return false;
+    return true;
+  });
+}
+
+function extractInternalLinks(html, baseUrl) {
+  const currentUrlObj = new URL(baseUrl);
+  const targetHost = currentUrlObj.hostname.replace(/^www\./, ""); // Base domain comparison
+
+  const re = /href=["']([^"']+)["']/gi;
+  const links = [];
+  let match;
+  while ((match = re.exec(html)) !== null) {
+    try {
+      const url = new URL(match[1], baseUrl);
+      const linkHost = url.hostname.replace(/^www\./, "");
+
+      // Flexible Domain Matching (Allow subdomains and www)
+      if ((linkHost === targetHost || url.hostname.endsWith("." + targetHost)) &&
+        !url.pathname.endsWith(".js") && !url.pathname.endsWith(".css")) {
+        links.push(normalizeUrl(url.href.split("#")[0]));
+      }
+    } catch { }
+  }
+  return [...new Set(links)];
+}
+
+function extractScriptUrls(html, baseUrl) {
+  const currentUrlObj = new URL(baseUrl);
+  const targetHost = currentUrlObj.hostname.replace(/^www\./, "");
+
+  const re = /<script[^>]+src=["']([^"']+)["']/gi;
+  const scripts = [];
+  let match;
+  while ((match = re.exec(html)) !== null) {
+    try {
+      const url = new URL(match[1], baseUrl);
+      const scriptHost = url.hostname.replace(/^www\./, "");
+
+      // Flexible Domain Matching for Scripts
+      if (scriptHost === targetHost || url.hostname.endsWith("." + targetHost) || !url.hostname) {
+        scripts.push(normalizeUrl(url.href));
+      }
+    } catch { }
+  }
+  return [...new Set(scripts)];
+}
+
+// Navigation & Tool Switching
+const navCrawler = document.getElementById("navCrawler");
+const navProber = document.getElementById("navProber");
+const crawlerSection = document.getElementById("crawler-section");
+const proberSection = document.getElementById("prober-section");
+
+navCrawler.onclick = () => {
+  navCrawler.classList.add("active");
+  navProber.classList.remove("active");
+  crawlerSection.style.display = "block";
+  proberSection.style.display = "none";
+};
+
+navProber.onclick = () => {
+  navProber.classList.add("active");
+  navCrawler.classList.remove("active");
+  proberSection.style.display = "block";
+  crawlerSection.style.display = "none";
+};
+
+// v2.0: Probing & Parameter Discovery Logic
+const probeBtn = document.getElementById("probeBtn");
+const proberResults = document.getElementById("prober-results");
+const proberUrlInput = document.getElementById("proberUrlInput");
+const proberProgressBar = document.getElementById("prober-progress-bar");
+const proberProgressContainer = document.getElementById("prober-progress-container");
+const proberStatus = document.getElementById("prober-status");
+
+// Prober Stats Elements
+const proberStat200 = document.getElementById("prober-stat-200");
+const proberStat403 = document.getElementById("prober-stat-403");
+const proberStat404 = document.getElementById("prober-stat-404");
+const proberFilterSection = document.getElementById("prober-filter-section");
+
+let proberData = []; // v2.0: Store results for filtering
+let activeProberFilter = "all";
+
+probeBtn.onclick = async () => {
+  let url = proberUrlInput.value.trim();
+  if (!url) return alert("Enter a URL to probe");
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+
+  try {
+    // v2.0 Fix: Strip trailing slash from origin to prevent // in paths
+    const origin = new URL(url).origin.replace(/\/+$/, "");
+    proberResults.innerHTML = "";
+    proberResults.style.display = "block";
+    proberProgressContainer.style.display = "block";
+    proberFilterSection.style.display = "none";
+    proberProgressBar.style.width = "0%";
+
+    // Reset Stats & Data
+    proberData = [];
+    let stats = { 200: 0, 403: 0, 404: 0 };
+    proberStat200.innerText = "0";
+    proberStat403.innerText = "0";
+    proberStat404.innerText = "0";
+
+    probeBtn.disabled = true;
+
+    let completed = 0;
+    const total = sensitivePaths.length;
+
+    for (const path of sensitivePaths) {
+      completed++;
+      const percent = (completed / total) * 100;
+      proberProgressBar.style.width = percent + "%";
+      proberStatus.innerText = `Probing: ${path} (${completed}/${total})`;
+
+      // Ensure path starts with / but origin doesn't end with it
+      const cleanPath = path.startsWith("/") ? path : "/" + path;
+      const fullUrl = origin + cleanPath;
+      const proxyUrlWithTarget = `https://corsproxy.io/?url=${encodeURIComponent(fullUrl)}`;
+
+      try {
+        const res = await fetch(proxyUrlWithTarget, { method: 'GET' }); // GET to see content if needed
+        const status = res.status;
+
+        // Update stats
+        if (status === 200) stats[200]++;
+        else if (status === 403 || status === 401) stats[403]++;
+        else stats[404]++; // 404 and others
+
+        proberStat200.innerText = stats[200];
+        proberStat403.innerText = stats[403];
+        proberStat404.innerText = stats[404];
+
+        const resultItem = { path, status, fullUrl };
+        proberData.push(resultItem);
+
+        // Live update UI if it matches current filter
+        if (activeProberFilter === "all" ||
+          (activeProberFilter === "200" && status === 200) ||
+          (activeProberFilter === "403" && (status === 403 || status === 401)) ||
+          (activeProberFilter === "404" && status === 404)) {
+          renderProberLine(path, status, fullUrl);
+        }
+      } catch (e) {
+        stats[404]++;
+        proberStat404.innerText = stats[404];
+        const resultItem = { path, status: "ERROR", fullUrl };
+        proberData.push(resultItem);
+        if (activeProberFilter === "all" || activeProberFilter === "404") {
+          renderProberLine(path, "ERROR", fullUrl);
+        }
+      }
+    }
+    proberStatus.innerText = `Probing complete! ${total} paths checked.`;
+    proberFilterSection.style.display = "flex";
+  } catch (e) {
+    alert("Invalid URL");
+  } finally {
+    probeBtn.disabled = false;
+  }
+};
+
+const filterProberResults = (filter) => {
+  activeProberFilter = filter;
+  proberResults.innerHTML = "";
+
+  proberData.forEach(item => {
+    const statusNum = parseInt(item.status);
+    let match = false;
+
+    if (filter === "all") match = true;
+    else if (filter === "200" && statusNum === 200) match = true;
+    else if (filter === "403" && (statusNum === 403 || statusNum === 401)) match = true;
+    else if (filter === "404" && (statusNum === 404 || item.status === "ERROR")) match = true;
+
+    if (match) {
+      renderProberLine(item.path, item.status, item.fullUrl);
     }
   });
 
-  if (filteredHtmlLinks.length > 0) {
-    const dedup = [...new Set(filteredHtmlLinks)];
-    allResults.push({ jsUrl: "Visible HTML Links", endpoints: dedup });
-    display("Visible HTML Links", dedup);
-  }
+  // Update button active state
+  document.querySelectorAll("[data-prober-filter]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-prober-filter") === filter);
+  });
+};
 
-  // Scan JS discovered via href in parallel (no limit)
-  await Promise.all(
-    jsToScanFromLinks.map(async (jsUrl) => {
-      if (scannedJs.has(jsUrl)) return;
-      scannedJs.add(jsUrl);
+// Prober Filter Click Event
+document.querySelectorAll("#prober-filter-section .tab-btn").forEach(btn => {
+  btn.onclick = () => filterProberResults(btn.getAttribute("data-prober-filter"));
+});
 
-      status.innerText = `Scanning [href] JS: ${jsUrl}`;
-      const endpoints = await extractEndpointsFromJS(jsUrl);
-      allResults.push({ jsUrl, endpoints });
-      display(jsUrl, endpoints);
-    })
-  );
+function renderProberLine(path, status, fullUrl) {
+  const line = document.createElement("div");
+  line.className = "prober-line";
 
-  return html;
+  let statusClass = "status-error"; // Default Red
+  if (status === 200) statusClass = "status-200"; // Green
+  else if (status === 403 || status === 401) statusClass = "status-403"; // Orange
+  else if (status === 404) statusClass = "status-404"; // Red (Specified)
+
+  line.innerHTML = `
+    <span class="prober-path">${path}</span>
+    <div style="display: flex; align-items: center;">
+      <span class="prober-status ${statusClass}">${status}</span>
+      ${status === 200 ? `<a href="${fullUrl}" target="_blank" class="prober-open-btn">OPEN🔗</a>` : ""}
+    </div>
+  `;
+
+  // Remove loading text if first result
+  if (proberResults.querySelector(".status")) proberResults.innerHTML = "";
+  proberResults.appendChild(line);
 }
 
-function extractJSUrls(html, baseUrl) {
-  const re = /<script[^>]+src=["']([^"']+)["']/gi;
-  let match;
-  const urls = [];
-  const baseHost = new URL(baseUrl).hostname.toLowerCase();
-
-  while ((match = re.exec(html)) !== null) {
-    try {
-      const fullUrl = new URL(match[1], baseUrl).href;
-      const lowered = fullUrl.toLowerCase();
-      const host = new URL(fullUrl).hostname.toLowerCase();
-
-      // Only scan same-site JS (correct/robust check)
-      const sameSite = host === baseHost || host.endsWith("." + baseHost);
-      if (!sameSite || !filterUrl(lowered)) continue;
-
-      urls.push(fullUrl);
-    } catch {}
-  }
-
-  return [...new Set(urls)];
-}
-
-async function extractEndpointsFromJS(jsUrl) {
-  try {
-    const res = await fetch(proxyUrl(jsUrl));
-    if (!res.ok) {
-      console.warn("Could not fetch (status " + res.status + "):", jsUrl);
-      return [];
-    }
-    const code = await res.text();
-    const matches = [...code.matchAll(endpointRegex)];
-    const raw = matches.map(m => m[1]);
-    const filtered = [...new Set(raw.filter(url => filterUrl(url)))];
-    return filtered;
-  } catch (e) {
-    console.warn("Could not fetch:", jsUrl, e);
-    return [];
-  }
+// Comprehensive helper to identify files (aligned with regex)
+function isInterestingFile(url) {
+  if (!url) return false;
+  const cleaned = url.split("?")[0].toLowerCase();
+  const interestingExtensions = [
+    ".json", ".xml", ".config", ".env", ".yaml", ".yml", ".sql", ".db", ".bak",
+    ".zip", ".tar", ".gz", ".7z", ".pdf", ".doc", ".docx", ".js", ".html",
+    ".php", ".asp", ".aspx", ".jsp", ".txt"
+  ];
+  return interestingExtensions.some(ext => cleaned.endsWith(ext));
 }
 
 function filterUrl(url) {
@@ -224,82 +1138,121 @@ function filterUrl(url) {
   );
 }
 
-function display(jsUrl, endpoints) {
-  const container = document.createElement("div");
-  container.className = "card";
+function renderResults(filter = "", category = "all") {
+  results.innerHTML = "";
+  const grouped = {};
 
-  if (jsUrl === "Visible HTML Links") {
-    container.classList.add("html-section");
-  }
+  state.allData.forEach(item => {
+    if (category !== "all" && item.type !== category.slice(0, -1)) return;
+    if (filter && !item.value.toLowerCase().includes(filter.toLowerCase())) return;
 
-  const title = document.createElement("h3");
-  title.innerText = jsUrl;
+    if (!grouped[item.source]) grouped[item.source] = [];
+    grouped[item.source].push(item);
+  });
 
-  if (!endpoints || endpoints.length === 0) {
-    const fallback = document.createElement("pre");
-    fallback.innerText = "No endpoints found.";
-    container.appendChild(title);
-    container.appendChild(fallback);
-    results.appendChild(container);
+  const sourceEntries = Object.entries(grouped);
+  if (sourceEntries.length === 0) {
+    results.innerHTML = "<div class='status'>No results found matching your criteria.</div>";
     return;
   }
 
-  const list = document.createElement("ol");
+  for (const [source, items] of sourceEntries) {
+    const card = document.createElement("div");
+    card.className = "card";
+    const title = document.createElement("h3");
+    title.innerText = source;
+    card.appendChild(title);
 
-  endpoints.forEach((endpoint) => {
-    const item = document.createElement("li");
-    const endpointSpan = document.createElement("span");
-    endpointSpan.textContent = endpoint;
-    endpointSpan.className = "endpoint-text";
+    const list = document.createElement("ol");
+    items.forEach(item => {
+      const li = document.createElement("li");
 
-    const copyBtn = document.createElement("button");
-    copyBtn.innerHTML = `
-      <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-          d="M8 8h11M8 12h8M8 16h6M5 4h14a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/>
-      </svg>`;
-    copyBtn.className = "copy-btn";
-    copyBtn.title = "Copy";
+      const lineSpan = document.createElement("span");
+      lineSpan.className = "line-number";
+      lineSpan.innerText = `[L${item.line}]`;
 
-    copyBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(endpoint);
-      } catch {
-        // Fallback for older browsers/non-HTTPS
-        const ta = document.createElement("textarea");
-        ta.value = endpoint;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand("copy");
-        document.body.removeChild(ta);
-      }
-      copyBtn.classList.add("copied");
-      setTimeout(() => {
-        copyBtn.classList.remove("copied");
-      }, 1000);
+      const span = document.createElement("span");
+      span.className = `endpoint-text ${item.type === 'secret' ? 'secret-item' : ''}`;
+      span.innerText = item.value;
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "copy-btn";
+      copyBtn.innerHTML = "📋";
+      copyBtn.onclick = () => copyToClipboard(item.value, copyBtn);
+
+      li.appendChild(lineSpan);
+      li.appendChild(span);
+      li.appendChild(copyBtn);
+      list.appendChild(li);
     });
-
-    item.appendChild(endpointSpan);
-    item.appendChild(copyBtn);
-    list.appendChild(item);
-  });
-
-  container.appendChild(title);
-  container.appendChild(list);
-  results.appendChild(container);
+    card.appendChild(list);
+    results.appendChild(card);
+  }
 }
 
-exportTxt.addEventListener("click", () => {
-  const content = allResults.map(entry => {
-    return `${entry.jsUrl}\n-------------------------\n${entry.endpoints.join("\n")}\n`;
-  }).join("\n\n");
-  downloadFile("endpoints.txt", content, "text/plain");
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.classList.add("copied");
+    btn.innerText = "✅";
+    setTimeout(() => {
+      btn.classList.remove("copied");
+      btn.innerText = "📋";
+    }, 2000);
+  } catch { }
+}
+
+// Tabs & Filter Logic (Crawler Section)
+document.querySelectorAll("#crawler-section .tab-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelector("#crawler-section .tab-btn.active").classList.remove("active");
+    btn.classList.add("active");
+    renderResults(document.getElementById("filterInput").value, btn.dataset.tab);
+  };
 });
 
-exportJson.addEventListener("click", () => {
-  const json = JSON.stringify(allResults, null, 2);
-  downloadFile("endpoints.json", json, "application/json");
-});
+document.getElementById("filterInput").oninput = (e) => {
+  const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
+  renderResults(e.target.value, activeTab);
+};
+
+// Advanced Exports
+const exportCsv = document.getElementById("exportCsv");
+const exportMd = document.getElementById("exportMd");
+
+exportCsv.onclick = () => {
+  const csv = "Source,Line,Type,Value\n" + state.allData.map(d => `"${d.source}",${d.line},"${d.type}","${d.value.replace(/"/g, '""')}"`).join("\n");
+  downloadFile("jjs-results.csv", csv, "text/csv");
+};
+
+exportMd.onclick = () => {
+  let md = "# JSpider Scan Results\n\n";
+  md += `**Total Endpoints:** ${state.endpoints.size}\n`;
+  md += `**Total Secrets:** ${state.secrets.size}\n\n`;
+
+  const grouped = {};
+  state.allData.forEach(d => {
+    if (!grouped[d.source]) grouped[d.source] = [];
+    grouped[d.source].push(d);
+  });
+
+  for (const [src, items] of Object.entries(grouped)) {
+    md += `### ${src}\n`;
+    items.forEach(it => md += `- [L${it.line}] [${it.type}] ${it.value}\n`);
+    md += "\n";
+  }
+  downloadFile("jjs-report.md", md, "text/markdown");
+};
+
+exportTxt.onclick = () => {
+  const content = state.allData.map(d => `[L${d.line}] [${d.type}] ${d.value} (Source: ${d.source})`).join("\n");
+  downloadFile("jjs-endpoints.txt", content, "text/plain");
+};
+
+exportJson.onclick = () => {
+  const json = JSON.stringify(state.allData, null, 2);
+  downloadFile("jjs-results.json", json, "application/json");
+};
 
 function downloadFile(filename, content, type) {
   const blob = new Blob([content], { type });
@@ -312,23 +1265,4 @@ function downloadFile(filename, content, type) {
     URL.revokeObjectURL(link.href);
     document.body.removeChild(link);
   }, 0);
-}
-
-// 🔍 Universal filter across JS & HTML (guard + hide empty cards)
-const filterInputEl = document.getElementById("filterInput");
-if (filterInputEl) {
-  filterInputEl.addEventListener("input", function () {
-    const keyword = this.value.toLowerCase();
-    document.querySelectorAll(".endpoint-text").forEach((el) => {
-      const match = el.innerText.toLowerCase().includes(keyword);
-      el.parentElement.style.display = match ? "flex" : "none";
-    });
-    // Hide cards that have no visible list items
-    document.querySelectorAll(".card").forEach((card) => {
-      const items = card.querySelectorAll("ol li");
-      if (!items.length) return;
-      const anyVisible = Array.from(items).some(li => li.style.display !== "none");
-      card.style.display = anyVisible ? "" : "none";
-    });
-  });
 }
