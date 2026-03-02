@@ -131,7 +131,12 @@ header h1 {
   border-radius: 16px;
   text-align: center;
   backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  /* Safari/Mobile support */
   transition: transform 0.3s ease, border-color 0.3s ease;
+  transform: translateZ(0);
+  /* Force GPU acceleration */
+  will-change: transform;
 }
 
 .stat-card:hover {
@@ -165,6 +170,9 @@ header h1 {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   margin-bottom: 2.5rem;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transform: translateZ(0);
 }
 
 .input-group {
@@ -468,6 +476,9 @@ footer a:hover {
   border-radius: 20px;
   border: 1px solid rgba(255, 65, 54, 0.1);
   margin-bottom: 2.5rem;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  transform: translateZ(0);
 }
 
 .prober-header {
