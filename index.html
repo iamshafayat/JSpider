@@ -1,51 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Get all endpoints from JavaScript files on any website">
-  <title>JSpider</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="JSpider - Advanced client-side JavaScript crawler & endpoint discovery tool. Extract hidden API routes, secrets, and files instantly from any website.">
+  <meta name="keywords"
+    content="JSpider, javascript crawler, endpoint discovery, security recon, web scraper, api discovery, bug bounty tool, client-side crawler">
+  <meta name="author" content="Shafayat Ahmed Alif">
+  <link rel="canonical" href="https://iamshafayat.github.io/JSpider/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://iamshafayat.github.io/JSpider/">
+  <meta property="og:title" content="JSpider - Advanced JavaScript Crawler & Endpoint Discovery">
+  <meta property="og:description"
+    content="Advanced endpoint discovery and secret detection tool for security researchers. 100% client-side and privacy-focused.">
+  <meta property="og:image" content="https://iamshafayat.github.io/JSpider/JSpider-screenshot.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://iamshafayat.github.io/JSpider/">
+  <meta property="twitter:title" content="JSpider - Advanced JavaScript Crawler & Endpoint Discovery">
+  <meta property="twitter:description"
+    content="Extract hidden API endpoints and secrets instantly from any JS file. Built for speed and reconnaissance.">
+  <meta property="twitter:image" content="https://iamshafayat.github.io/JSpider/JSpider-screenshot.png">
+
+  <title>JSpider - Advanced JavaScript Crawler & Endpoint Discovery</title>
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "JSpider",
+    "url": "https://iamshafayat.github.io/JSpider/",
+    "description": "Advanced client-side JavaScript crawler and reconnaissance tool for endpoint discovery and secret detection.",
+    "applicationCategory": "SecurityTool",
+    "softwareVersion": "2.0",
+    "operatingSystem": "Web Browser",
+    "author": {
+      "@type": "Person",
+      "name": "Shafayat Ahmed Alif"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
   <link rel="icon" href="favicon.png">
 </head>
+
 <body>
 
   <div class="wrapper">
     <header>
-      <h1>🕷️ JSpider</h1>
-      <p class="tagline">Smart crawler for hidden endpoints.</p>
-      <p>Crawl and extract hidden API endpoints and URLs from JavaScript files and HTML source code — directly in your browser.</p>
-      <p>Built for recon - Fast, lightweight and 100% client-side.</p>
+      <h1>🕷️ JSpider <span class="version">V2.0</span></h1>
+      <span class="blue-text-highlight">Advanced JavaScript Crawler & Endpoint Discovery</span>
+      <div class="header-description">
+        The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive parameters, and hardcoded secrets instantly from any website — directly in your
+        browser.
+        <span class="recon-tagline">Built for recon - Fast, lightweight and 100% client-side.</span>
+      </div>
+      <div class="tool-nav">
+        <button id="navCrawler" class="nav-btn active">Smart Crawler</button>
+        <button id="navProber" class="nav-btn">Sensitive Path Prober</button>
+      </div>
     </header>
 
-    <section class="input-group">
-      <input id="urlInput" type="url" placeholder="https://example.com" autofocus required/>
-      <button id="scanBtn">Scan</button>
-    </section>
+    <!-- Smart Crawler Section -->
+    <div id="crawler-section">
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <span class="stat-label">Scanned</span>
+          <span id="stat-scanned" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Endpoints</span>
+          <span id="stat-endpoints" class="stat-value">0</span>
+        </div>
+        <div class="stat-card warning">
+          <span class="stat-label">Secrets</span>
+          <span id="stat-secrets" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Files</span>
+          <span id="stat-files" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Parameters</span>
+          <span id="stat-parameters" class="stat-value">0</span>
+        </div>
+      </div>
 
-    <section id="filter-section" style="display: none;">
-      <input id="filterInput" placeholder="🔎 Filter endpoints..." />
-    </section>
+      <section class="scan-container">
+        <div class="input-group">
+          <input id="urlInput" type="url" placeholder="https://example.com" autofocus required />
+          <div class="button-group">
+            <button id="scanBtn" title="Scan only this page and its JS">Scan Page</button>
+            <button id="fullScanBtn" class="primary-btn" title="Recursively scan the entire domain">Full Scan</button>
+          </div>
+        </div>
 
-    <div id="status" class="status"></div>
-    <section id="results" class="results"></section>
-	
-	<section id="actions" class="export-actions" style="display: none;">
-	  <button id="exportTxt">📥 Export .txt</button>
-      <button id="exportJson">📥 Export .json</button>
-    </section>
+        <div id="progress-container" class="progress-container" style="display: none;">
+          <div class="progress-bar-bg">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+          <div id="status" class="status">Ready to scan...</div>
+        </div>
+      </section>
+
+      <section id="filter-section" class="filter-section" style="display: none;">
+        <div class="search-wrapper">
+          <input id="filterInput" placeholder="🔎 Filter results across all categories..." />
+        </div>
+        <div class="category-tabs">
+          <button class="tab-btn active" data-tab="all">All</button>
+          <button class="tab-btn" data-tab="endpoints">🔗 Endpoints</button>
+          <button class="tab-btn" data-tab="parameters">🎯 Parameters</button>
+          <button class="tab-btn" data-tab="secrets">🔑 Secrets</button>
+          <button class="tab-btn" data-tab="files">📂 Files</button>
+        </div>
+      </section>
+
+      <main id="results-container" class="results-container">
+        <div id="results-all" class="tab-content active">
+          <div id="results" class="results-grid"></div>
+        </div>
+      </main>
+
+      <section id="actions" class="export-actions" style="display: none;">
+        <div class="export-group">
+          <button id="exportTxt" title="Export as plain text">📄 .txt</button>
+          <button id="exportJson" title="Export as structured JSON">📁 .json</button>
+          <button id="exportCsv" title="Export as CSV for spreadsheets">📊 .csv</button>
+          <button id="exportMd" title="Export as Markdown report">📑 .md</button>
+        </div>
+      </section>
+    </div> <!-- End Crawler Section -->
+
+    <!-- Sensitive Path Prober Section -->
+    <div id="prober-section" style="display: none;">
+      <section class="prober-container">
+        <div class="prober-header">
+          <h2>🔥 Sensitive Path Prober</h2>
+          <p>Manually check for critical files (.env, .git, config, etc.) on any domain.</p>
+        </div>
+
+        <!-- Prober Stats Dashboard -->
+        <div class="dashboard-stats" style="margin-bottom: 2rem;">
+          <div class="stat-card">
+            <span class="stat-label">Found (200)</span>
+            <span id="prober-stat-200" class="stat-value" style="color: var(--success);">0</span>
+          </div>
+          <div class="stat-card warning">
+            <span class="stat-label">Forbidden (403)</span>
+            <span id="prober-stat-403" class="stat-value" style="color: #ff851b;">0</span>
+          </div>
+          <div class="stat-card danger">
+            <span class="stat-label">Missing (404)</span>
+            <span id="prober-stat-404" class="stat-value" style="color: var(--danger);">0</span>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <input id="proberUrlInput" type="url" placeholder="https://example.com" />
+          <button id="probeBtn" class="prober-btn">Check Paths</button>
+        </div>
+        <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
+          <div class="progress-bar-bg">
+            <div id="prober-progress-bar" class="progress-bar" style="background: #ff4136;"></div>
+          </div>
+          <div id="prober-status" class="status" style="color: #ff4136;">Probing paths...</div>
+        </div>
+
+        <div id="prober-filter-section" class="category-tabs"
+          style="display: none; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+          <button class="tab-btn active" data-prober-filter="all">All</button>
+          <button class="tab-btn" data-prober-filter="200">✅ Found (200)</button>
+          <button class="tab-btn" data-prober-filter="403">🟠 Forbidden (403)</button>
+          <button class="tab-btn" data-prober-filter="404">❌ Missing (404)</button>
+        </div>
+
+        <div id="prober-results" class="prober-results-list" style="display: none;">
+          <!-- Prober lines will be rendered here -->
+        </div>
+      </section>
+    </div>
 
     <footer>
       <p>
         Made with ❤️ by
         <a href="https://www.linkedin.com/in/iamshafayat" target="_blank" rel="noopener noreferrer">
-        Shafayat Ahmed Alif</a>
+          Shafayat Ahmed Alif</a>
         for Security Researchers
       </p>
     </footer>
   </div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
+
 </html>
