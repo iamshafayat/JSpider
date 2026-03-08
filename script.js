@@ -618,8 +618,23 @@ const sensitivePaths = [
 const normalizeUrl = (url) => {
   try {
     const u = new URL(url);
-    return u.origin + u.pathname.replace(/\/+$/, "") + u.search;
+    // Preserving trailing slashes for directory fidelity
+    return u.origin + u.pathname + u.search;
   } catch { return url; }
+};
+
+// Helper to ensure base URL is treated as a directory for relative path resolution
+const directoryfyUrl = (url) => {
+  if (url.endsWith('/')) return url;
+  try {
+    const urlObj = new URL(url);
+    const lastPart = urlObj.pathname.split('/').pop() || "";
+    // If the last part has no extension, treat it as a directory
+    if (!lastPart.includes('.')) {
+      return url + '/';
+    }
+  } catch { }
+  return url;
 };
 
 const proxyUrl = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
@@ -905,7 +920,8 @@ function extractFilesWithLines(content) {
 }
 
 function extractInternalLinks(html, baseUrl) {
-  const currentUrlObj = new URL(baseUrl);
+  const directoryBase = directoryfyUrl(baseUrl);
+  const currentUrlObj = new URL(directoryBase);
   const targetHost = currentUrlObj.hostname.replace(/^www\./, ""); // Base domain comparison
 
   const re = /href=["']([^"']+)["']/gi;
@@ -913,7 +929,7 @@ function extractInternalLinks(html, baseUrl) {
   let match;
   while ((match = re.exec(html)) !== null) {
     try {
-      const url = new URL(match[1], baseUrl);
+      const url = new URL(match[1], directoryBase);
       const linkHost = url.hostname.replace(/^www\./, "");
 
       // Flexible Domain Matching (Allow subdomains and www)
@@ -927,7 +943,8 @@ function extractInternalLinks(html, baseUrl) {
 }
 
 function extractScriptUrls(html, baseUrl) {
-  const currentUrlObj = new URL(baseUrl);
+  const directoryBase = directoryfyUrl(baseUrl);
+  const currentUrlObj = new URL(directoryBase);
   const targetHost = currentUrlObj.hostname.replace(/^www\./, "");
 
   const re = /<script[^>]+src=["']([^"']+)["']/gi;
@@ -935,7 +952,7 @@ function extractScriptUrls(html, baseUrl) {
   let match;
   while ((match = re.exec(html)) !== null) {
     try {
-      const url = new URL(match[1], baseUrl);
+      const url = new URL(match[1], directoryBase);
       const scriptHost = url.hostname.replace(/^www\./, "");
 
       // Flexible Domain Matching for Scripts
@@ -1266,4 +1283,3 @@ function downloadFile(filename, content, type) {
     document.body.removeChild(link);
   }, 0);
 }
-
