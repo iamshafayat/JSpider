@@ -29,7 +29,7 @@ JSpider V2.0 is a massive evolution, transforming from a simple scraper into a p
 - **Sensitive Path Prober**: Automated checks for **500+ critical paths** including `.env`, `.git/config`, `phpinfo.php`, backups, and cloud configurations.
 - **Parameter Discovery**: Dedicated extraction and grouping of URL parameters to identify potential injection points.
 - **Recursive Discovery Engine**: Full website crawling capability (Depth 1) with deep script analysis to find hidden routes.
-- **Precision Secret Detection**: Hardened regex for AWS Keys, Google Cloud, GitHub, Slack, Discord, and JWT tokens.
+- **Precision Secret Detection**: High-fidelity regex for **20+ patterns** including AWS, Google Cloud, Stripe, Slack/Discord Webhooks, and JWT.
 - **High-Fidelity Mapping**: Captures raw file paths and absolute URLs without truncation, preserving double slashes and complex structures.
 
 ---
@@ -50,7 +50,7 @@ It extracts data from external JS files, inline scripts, and HTML source code - 
 
 | Feature | Description |
 |------|-------------|
-| 🔑 **Secret Detection** | Detects AWS, Google, GitHub tokens, Bearer tokens, and more. |
+| 🔑 **Secret Detection** | High-fidelity detection for 20+ keys including AWS, Google, Stripe, Slack/Discord Webhooks, and JWT. |
 | 🕷️ **Recursive Scan** | Depth-limited (v2.0: Depth 1) crawling of internal links. |
 | 📊 **Real-time Stats** | Live dashboard tracking Scanned URLs, Endpoints, Secrets, and Files. |
 | 🛡️ **Path Prober** | Manual check for 500+ sensitive files with live status code reporting. |
