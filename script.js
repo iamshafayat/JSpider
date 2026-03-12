@@ -646,16 +646,32 @@ const endpointRegex = new RegExp(
 
 // Advanced Secret Detection Patterns
 const secretPatterns = {
-  "AWS Access Key": /([^A-Z0-9](?:AKIA|ASIA)[A-Z0-9]{16}[^A-Z0-9])/g,
-  "AWS Secret Key": /((?:[^A-Za-z0-9/+=]|^)[A-Za-z0-9/+=]{40}(?:[^A-Za-z0-9/+=]|$))/g,
-  "Google API Key": /AIza[0-9A-Za-z-_]{35}/g,
-  "Firebase URL": /[a-z0-9.-]+\.firebaseio\.com/g,
-  "Bearer Token": /Bearer\s+[A-Za-z0-9-_=]{10,}/g, // Catch eyJ... and other bearer tokens
-  "GitHub Token": /gh[pous]_[a-zA-Z0-9]{36}/g,
+  "AWS Key": /AKIA[0-9A-Z]{16}/g,
+  "Google API": /AIza[0-9A-Za-z\-_]{35}/g,
+  "Stripe Live": /sk_live_[0-9a-zA-Z]{24,}/g,
+  "GitHub PAT": /ghp_[0-9a-zA-Z]{36}/g,
+  "Slack Token": /xox[baprs]-[0-9a-zA-Z\-]{10,48}/g,
+  "JWT": /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+/g,
+  "Private Key": /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/g,
+  "MongoDB": /mongodb(?:\+srv)?:\/\/[^\s"\'<>]+/g,
+  "PostgreSQL": /postgres(?:ql)?:\/\/[^\s"\'<>]+/g,
+  "Algolia Admin API Key": /algolia.{0,32}([a-z0-9]{32})\b/gi,
+  "Algolia Application ID": /algolia.{0,16}([A-Z0-9]{10})\b/gi,
+  "Cloudflare API Token": /cloudflare.{0,32}(?:secret|private|access|key|token).{0,32}([a-z0-9_-]{38,42})\b/gi,
+  "Cloudflare Service Key": /(?:cloudflare|x-auth-user-service-key).{0,64}(v1\.0-[a-z0-9._-]{160,})\b/gi,
+  "MySQL URI with Credentials": /mysql:\/\/[a-z0-9._%+\-]+:[^\s:@]+@(?:\[[0-9a-f:.]+\]|[a-z0-9.-]+)(?::\d{2,5})?(?:\/[^\s"\'?:]+)?(?:\?[^\s"\']*)?/g,
+  "Segment Public API Token": /\bsgp_[A-Z0-9_-]{60,70}\b/g,
+  "Segment API Key": /(?:segment|sgmt).{0,16}(?:secret|private|access|key|token).{0,16}([A-Z0-9_-]{40,50}\.[A-Z0-9_-]{40,50})/gi,
+  "Facebook App ID": /(?:facebook|fb).{0,8}(?:app|application).{0,16}(\d{15})\b/gi,
+  "Facebook Secret Key": /(?:facebook|fb).{0,32}(?:api|app|application|client|consumer|secret|key).{0,32}([a-z0-9]{32})\b/gi,
+  "Facebook Access Token": /EAACEdEose0cBA[A-Z0-9]{20,}\b/g,
+  "Google OAuth2 Access Token": /\bya29\.[a-z0-9_-]{30,}\b/g,
   "Slack Webhook": /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/g,
-  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g,
-  "Generic Secret": /\b(?:key|api|token|secret|auth|password|pwd)\b(?:\s*[:=]\s*["']?)([a-zA-Z0-9\-_]{16,})/gi
+  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g
 };
+
+// Fast-Path Check: Only run detailed regexes if one of these keywords is present
+const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks/i;
 
 const blockedSecretKeywords = [
   "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
@@ -844,8 +860,15 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
   }
 }
 
+// Optimized Line Counter - O(n) scan instead of O(n) string duplication
 function getLineNumber(content, index) {
-  return content.substring(0, index).split("\n").length;
+  let line = 1;
+  let pos = 0;
+  while ((pos = content.indexOf("\n", pos)) !== -1 && pos < index) {
+    line++;
+    pos++;
+  }
+  return line;
 }
 
 function extractEndpointsWithLines(content) {
@@ -861,38 +884,21 @@ function extractEndpointsWithLines(content) {
 }
 
 function extractSecretsWithLines(content) {
+  // Fast-Path: If nothing looks like a secret, skip 20+ regex scans
+  if (!secretTrigger.test(content)) return [];
+
   const found = [];
   for (const [name, regex] of Object.entries(secretPatterns)) {
     const matches = [...content.matchAll(regex)];
     matches.forEach(m => {
-      let rawMatch = m[0];
-      let val = rawMatch.trim();
-
-      // AWS Hardening: Extract middle 40 chars if it was wrapped by delimiters
-      if (name === "AWS Secret Key") {
-        const cleaned = rawMatch.match(/[A-Za-z0-9/+=]{40}/);
-        if (!cleaned) return;
-        val = cleaned[0];
-
-        // Anti-JS-Property Filter: If preceded by '.', it's a JS property/method
-        const preChar = rawMatch.charAt(0);
-        if (preChar === '.' || content.charAt(m.index - 1) === '.') return;
-
-        // Entropy/Variety Check: AWS keys usually have symbols / or + and mixed case
-        // Function names like 'concatTransformMotionEffectCSSProperties' are alphabetical only
-        if (!/[/+=]/.test(val) && !(/[a-z]/.test(val) && /[A-Z]/.test(val) && /[0-9]/.test(val))) return;
-
-        // Common JS suffixes that indicate a function name
-        const jsSuffixes = ["Properties", "Elements", "Prototype", "Animation", "Listener", "Container"];
-        if (jsSuffixes.some(s => val.includes(s))) return;
-      } else {
-        val = (m[1] || m[0]).trim();
-      }
+      // Prefer capture group if present (m[1]), otherwise use whole match (m[0])
+      let val = (m[1] || m[0]).trim();
 
       // Anti-URL & False Positive Filter
-      if (val.includes("/") && val.split("/").length > 3) return;
+      // skip long paths unless it's a URI
+      if (val.includes("/") && val.split("/").length > 3 && !val.includes("://")) return;
       if (blockedSecretKeywords.some(bk => val.includes(bk))) return;
-      if (val.length < 8 || val.length > 128) return;
+      if (val.length < 8 || val.length > 500) return;
 
       found.push({
         value: `${name}: ${val}`,
