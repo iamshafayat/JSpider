@@ -992,6 +992,7 @@ navProber.onclick = () => {
 
 // v2.0: Probing & Parameter Discovery Logic
 const probeBtn = document.getElementById("probeBtn");
+const stopProbeBtn = document.getElementById("stopProbeBtn");
 const proberResults = document.getElementById("prober-results");
 const proberUrlInput = document.getElementById("proberUrlInput");
 const proberProgressBar = document.getElementById("prober-progress-bar");
@@ -1004,8 +1005,14 @@ const proberStat403 = document.getElementById("prober-stat-403");
 const proberStat404 = document.getElementById("prober-stat-404");
 const proberFilterSection = document.getElementById("prober-filter-section");
 
+// v2.0 Length Filters
+const proberLengthFilters = document.getElementById("prober-length-filters");
+const proberIncludeLength = document.getElementById("proberIncludeLength");
+const proberExcludeLength = document.getElementById("proberExcludeLength");
+
 let proberData = []; // v2.0: Store results for filtering
 let activeProberFilter = "all";
+let isProberStopped = false;
 
 probeBtn.onclick = async () => {
   let url = proberUrlInput.value.trim();
@@ -1018,7 +1025,8 @@ probeBtn.onclick = async () => {
     proberResults.innerHTML = "";
     proberResults.style.display = "block";
     proberProgressContainer.style.display = "block";
-    proberFilterSection.style.display = "none";
+    proberFilterSection.style.display = "flex"; // v2.0: Enable live filtering during scan
+    proberLengthFilters.style.display = "flex"; // Show length filters
     proberProgressBar.style.width = "0%";
 
     // Reset Stats & Data
@@ -1028,12 +1036,19 @@ probeBtn.onclick = async () => {
     proberStat403.innerText = "0";
     proberStat404.innerText = "0";
 
-    probeBtn.disabled = true;
+    probeBtn.style.display = "none";
+    stopProbeBtn.style.display = "inline-block";
+    stopProbeBtn.disabled = false;
+    isProberStopped = false;
 
     let completed = 0;
     const total = sensitivePaths.length;
 
     for (const path of sensitivePaths) {
+      if (isProberStopped) {
+        proberStatus.innerText = `Probing stopped manually.`;
+        break;
+      }
       completed++;
       const percent = (completed / total) * 100;
       proberProgressBar.style.width = percent + "%";
@@ -1045,8 +1060,10 @@ probeBtn.onclick = async () => {
       const proxyUrlWithTarget = `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
 
       try {
-        const res = await fetch(proxyUrlWithTarget, { method: 'GET' }); // GET to see content if needed
+        const res = await fetch(proxyUrlWithTarget, { method: 'GET' });
         const status = res.status;
+        const text = await res.text();
+        const length = text.length;
 
         // Update stats
         if (status === 200) stats[200]++;
@@ -1057,65 +1074,99 @@ probeBtn.onclick = async () => {
         proberStat403.innerText = stats[403];
         proberStat404.innerText = stats[404];
 
-        const resultItem = { path, status, fullUrl };
+        const resultItem = { path, status, fullUrl, length };
         proberData.push(resultItem);
 
         // Live update UI if it matches current filter
-        if (activeProberFilter === "all" ||
-          (activeProberFilter === "200" && status === 200) ||
-          (activeProberFilter === "403" && (status === 403 || status === 401)) ||
-          (activeProberFilter === "404" && status === 404)) {
-          renderProberLine(path, status, fullUrl);
+        if (doesItemMatchFilters(resultItem)) {
+          renderProberLine(path, status, fullUrl, length);
         }
       } catch (e) {
         stats[404]++;
         proberStat404.innerText = stats[404];
-        const resultItem = { path, status: "ERROR", fullUrl };
+        const resultItem = { path, status: "ERROR", fullUrl, length: 0 };
         proberData.push(resultItem);
-        if (activeProberFilter === "all" || activeProberFilter === "404") {
-          renderProberLine(path, "ERROR", fullUrl);
+        
+        if (doesItemMatchFilters(resultItem)) {
+          renderProberLine(path, "ERROR", fullUrl, 0);
         }
       }
     }
-    proberStatus.innerText = `Probing complete! ${total} paths checked.`;
+    if (!isProberStopped) {
+      proberStatus.innerText = `Probing complete! ${total} paths checked.`;
+    }
     proberFilterSection.style.display = "flex";
   } catch (e) {
     alert("Invalid URL");
   } finally {
-    probeBtn.disabled = false;
+    probeBtn.style.display = "inline-block";
+    stopProbeBtn.style.display = "none";
   }
 };
 
+stopProbeBtn.onclick = () => {
+  isProberStopped = true;
+  stopProbeBtn.disabled = true;
+  proberStatus.innerText = "Stopping prober... Finishing current request.";
+};
+
 const filterProberResults = (filter) => {
-  activeProberFilter = filter;
+  if (filter) activeProberFilter = filter;
   proberResults.innerHTML = "";
 
   proberData.forEach(item => {
-    const statusNum = parseInt(item.status);
-    let match = false;
-
-    if (filter === "all") match = true;
-    else if (filter === "200" && statusNum === 200) match = true;
-    else if (filter === "403" && (statusNum === 403 || statusNum === 401)) match = true;
-    else if (filter === "404" && (statusNum === 404 || item.status === "ERROR")) match = true;
-
-    if (match) {
-      renderProberLine(item.path, item.status, item.fullUrl);
+    if (doesItemMatchFilters(item)) {
+      renderProberLine(item.path, item.status, item.fullUrl, item.length);
     }
   });
 
   // Update button active state
   document.querySelectorAll("[data-prober-filter]").forEach(btn => {
-    btn.classList.toggle("active", btn.getAttribute("data-prober-filter") === filter);
+    btn.classList.toggle("active", btn.getAttribute("data-prober-filter") === activeProberFilter);
   });
 };
+
+function doesItemMatchFilters(item) {
+  // 1. Check Status Filter
+  const statusNum = parseInt(item.status);
+  let statusMatch = false;
+
+  if (activeProberFilter === "all") statusMatch = true;
+  else if (activeProberFilter === "200" && statusNum === 200) statusMatch = true;
+  else if (activeProberFilter === "403" && (statusNum === 403 || statusNum === 401)) statusMatch = true;
+  else if (activeProberFilter === "404" && (statusNum === 404 || item.status === "ERROR")) statusMatch = true;
+
+  if (!statusMatch) return false;
+
+  // 2. Check Length Filters (Include / Exclude)
+  const incStrings = proberIncludeLength.value.split(',').map(s => s.trim()).filter(s => s !== "");
+  const excStrings = proberExcludeLength.value.split(',').map(s => s.trim()).filter(s => s !== "");
+  
+  const itemLenStr = String(item.length);
+
+  // If include list has items, item.length MUST be in the list
+  if (incStrings.length > 0 && !incStrings.includes(itemLenStr)) {
+    return false;
+  }
+
+  // If exclude list has items, item.length MUST NOT be in the list
+  if (excStrings.length > 0 && excStrings.includes(itemLenStr)) {
+    return false;
+  }
+
+  return true;
+}
+
+// Bind live length filtering
+proberIncludeLength.addEventListener('input', () => filterProberResults());
+proberExcludeLength.addEventListener('input', () => filterProberResults());
 
 // Prober Filter Click Event
 document.querySelectorAll("#prober-filter-section .tab-btn").forEach(btn => {
   btn.onclick = () => filterProberResults(btn.getAttribute("data-prober-filter"));
 });
 
-function renderProberLine(path, status, fullUrl) {
+function renderProberLine(path, status, fullUrl, length) {
   const line = document.createElement("div");
   line.className = "prober-line";
 
@@ -1124,11 +1175,21 @@ function renderProberLine(path, status, fullUrl) {
   else if (status === 403 || status === 401) statusClass = "status-403"; // Orange
   else if (status === 404) statusClass = "status-404"; // Red (Specified)
 
+  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="margin-left:8px; color:#888; font-size:0.85em;">[${length}]</span>` : '';
+
+  let openBtnHtml = "";
+  if (status === 200) {
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn">OPEN🔗</a>`;
+  } else if (status === 403 || status === 401) {
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-403">OPEN🔗</a>`;
+  }
+
   line.innerHTML = `
     <span class="prober-path">${path}</span>
     <div style="display: flex; align-items: center;">
       <span class="prober-status ${statusClass}">${status}</span>
-      ${status === 200 ? `<a href="${fullUrl}" target="_blank" class="prober-open-btn">OPEN🔗</a>` : ""}
+      ${lengthDisplay}
+      ${openBtnHtml}
     </div>
   `;
 
