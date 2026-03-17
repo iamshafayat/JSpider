@@ -1200,21 +1200,21 @@ function renderProberLine(path, status, fullUrl, length) {
   else if (status === 403 || status === 401) statusClass = "status-403"; // Orange
   else if (status === 404) statusClass = "status-404"; // Red (Specified)
 
-  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="margin-left:8px; color:var(--danger); font-size:0.85em;">[${length}]</span>` : '';
+  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="color:var(--danger); font-size:0.85em; font-family: monospace;">[${length}]</span>` : '';
 
   let openBtnHtml = "";
   if (status === 200) {
-    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-200">OPEN🔗</a>`;
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-200" style="margin-left: 0;">OPEN🔗</a>`;
   } else if (status === 403 || status === 401) {
-    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-403">OPEN🔗</a>`;
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-403" style="margin-left: 0;">OPEN🔗</a>`;
   }
 
   line.innerHTML = `
-    <span class="prober-path">${path}</span>
-    <div style="display: flex; align-items: center;">
-      <span class="prober-status ${statusClass}">${status}</span>
-      ${openBtnHtml}
-      ${lengthDisplay}
+    <span class="prober-path" style="flex: 1; word-break: break-all; padding-right: 15px;">${path}</span>
+    <div style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
+      <span class="prober-status ${statusClass}" style="width: 50px; text-align: center;">${status}</span>
+      <div style="width: 75px; text-align: center; margin-left: 5px;">${openBtnHtml}</div>
+      <div style="width: 75px; text-align: right; margin-left: 5px;">${lengthDisplay}</div>
     </div>
   `;
 
