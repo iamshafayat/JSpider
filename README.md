@@ -26,7 +26,7 @@
 JSpider V2.0 is a massive evolution, transforming from a simple scraper into a proactive reconnaissance suite.
 
 ### ✨ Key Features:
-- **Sensitive Path Prober**: Automated checks for **500+ critical paths** including `.env`, `.git/config`, `phpinfo.php`, backups, and cloud configurations.
+- **Sensitive Path Prober**: Automated checks for **500+ critical paths** including `.env`, `.git/config`, `phpinfo.php`, backups, and cloud configurations. Features live response length filtering, instantaneous stop controls, and one-click inspection for 200/403 responses.
 - **Parameter Discovery**: Dedicated extraction and grouping of URL parameters to identify potential injection points.
 - **Recursive Discovery Engine**: Full website crawling capability (Depth 1) with deep script analysis to find hidden routes.
 - **Precision Secret Detection**: High-fidelity regex for **20+ patterns** including AWS, Google Cloud, Stripe, Slack/Discord Webhooks, and JWT.
@@ -53,7 +53,7 @@ It extracts data from external JS files, inline scripts, and HTML source code - 
 | 🔑 **Secret Detection** | High-fidelity detection for 20+ keys including AWS, Google, Stripe, Slack/Discord Webhooks, and JWT. |
 | 🕷️ **Recursive Scan** | Depth-limited (v2.0: Depth 1) crawling of internal links. |
 | 📊 **Real-time Stats** | Live dashboard tracking Scanned URLs, Endpoints, Secrets, and Files. |
-| 🛡️ **Path Prober** | Manual check for 500+ sensitive files with live status code reporting. |
+| 🛡️ **Path Prober** | Manual check for 500+ paths with response lengths, live filtering, and stop controls. |
 | 🎯 **Result Filtering** | Instantly sort findings into Endpoints, Secrets, and Files with a global filter. |
 | 📄 **Advanced Export** | Export to `.txt`, `.json`, `.csv`, and professional `.md` reports. |
 | ✅ **100% Client-Side** | No backend, no data leakage - privacy-focused by design. |
@@ -85,8 +85,9 @@ JSpider automatically excludes architectural noise to focus on valuable recon:
 2. Enter the target domain (e.g., `https://example.com`).
 3. Click **Check Paths** to start probing **500+ critical paths** (e.g., `.env`, `.git`, `phpinfo.php`).
 4. Watch the **Progress Bar** and live **Status Counters** (200, 403, 404).
-5. Use the **Status Filters** (Found, Forbidden, Missing) to analyze the detected paths.
-6. For `200 OK` results, use the **OPEN🔗** button to verify the leak directly.
+5. Use the **Status Filters** (Found, Forbidden, Missing) to analyze the detected paths live.
+6. **Advanced Filtering**: Use the **Include/Exclude Lengths** inputs to filter out standard WAF block pages by their byte size (e.g., exclude `127, 403`).
+7. 🔗 Use the **OPEN🔗** buttons to instantly verify 200 and 403 leaks in a new tab.
 
 ---
 
