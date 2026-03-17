@@ -59,7 +59,8 @@
       <h1>🕷️ JSpider <span class="version">V2.0</span></h1>
       <span class="blue-text-highlight">Advanced JavaScript Crawler & Endpoint Discovery</span>
       <div class="header-description">
-        The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive parameters, and hardcoded secrets instantly from any website — directly in your
+        The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive
+        parameters, and hardcoded secrets instantly from any website — directly in your
         browser.
         <span class="recon-tagline">Built for recon - Fast, lightweight and 100% client-side.</span>
       </div>
@@ -100,6 +101,7 @@
           <div class="button-group">
             <button id="scanBtn" title="Scan only this page and its JS">Scan Page</button>
             <button id="fullScanBtn" class="primary-btn" title="Recursively scan the entire domain">Full Scan</button>
+            <button id="stopScanBtn" class="primary-btn" style="display: none; background: var(--danger);" title="Stop the scan">Stop Scan</button>
           </div>
         </div>
 
@@ -185,7 +187,7 @@
         </div>
 
         <div id="prober-length-filters" class="input-group" style="display: none; margin-top: 1rem; gap: 10px;">
-          <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 127, 4236)" style="flex: 1;" />
+          <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 200, 4236)" style="flex: 1;" />
           <input id="proberExcludeLength" type="text" placeholder="Exclude Lengths (e.g. 404, 0)" style="flex: 1;" />
         </div>
 
