@@ -167,6 +167,7 @@
         <div class="input-group">
           <input id="proberUrlInput" type="url" placeholder="https://example.com" />
           <button id="probeBtn" class="prober-btn">Check Paths</button>
+          <button id="stopProbeBtn" class="prober-btn" style="display: none; background: var(--danger);">Stop</button>
         </div>
         <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
           <div class="progress-bar-bg">
@@ -181,6 +182,11 @@
           <button class="tab-btn" data-prober-filter="200">✅ Found (200)</button>
           <button class="tab-btn" data-prober-filter="403">🟠 Forbidden (403)</button>
           <button class="tab-btn" data-prober-filter="404">❌ Missing (404)</button>
+        </div>
+
+        <div id="prober-length-filters" class="input-group" style="display: none; margin-top: 1rem; gap: 10px;">
+          <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 127, 4236)" style="flex: 1;" />
+          <input id="proberExcludeLength" type="text" placeholder="Exclude Lengths (e.g. 404, 0)" style="flex: 1;" />
         </div>
 
         <div id="prober-results" class="prober-results-list" style="display: none;">
