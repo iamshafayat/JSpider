@@ -717,6 +717,8 @@ const disallowedPrefixes = [
   "intent://", "chrome-extension://", "about:", "chrome://"
 ];
 
+const stopScanBtn = document.getElementById("stopScanBtn");
+
 // Global State
 const state = {
   scanned: 0,
@@ -727,7 +729,8 @@ const state = {
   allData: [], // { source, type, value, line }
   scannedUrls: new Set(),
   probedDomains: new Set(),
-  isScanning: false
+  isScanning: false,
+  isCrawlerStopped: false
 };
 
 const updateStats = () => {
@@ -771,8 +774,12 @@ const startScan = async (maxDepth) => {
   updateStats();
 
   results.innerHTML = "";
-  scanBtn.disabled = true;
-  document.getElementById("fullScanBtn").disabled = true;
+  scanBtn.style.display = "none";
+  document.getElementById("fullScanBtn").style.display = "none";
+  stopScanBtn.style.display = "inline-block";
+  stopScanBtn.disabled = false;
+  state.isCrawlerStopped = false;
+
   document.getElementById("progress-container").style.display = "block";
   document.getElementById("filter-section").style.display = "none";
   exportActions.style.display = "none";
@@ -781,23 +788,39 @@ const startScan = async (maxDepth) => {
 
   try {
     await recursiveScan(siteUrl, maxDepth);
-    status.innerText = "Scan complete!";
+    if (!state.isCrawlerStopped) {
+      status.innerText = "Scan complete!";
+    } else {
+      status.innerText = "Scan stopped manually.";
+    }
     setProgress(100);
     document.getElementById("filter-section").style.display = "block";
     exportActions.style.display = "flex";
     renderResults();
   } catch (e) {
     console.error(e);
-    status.innerText = "Scan failed. Check console.";
+    if (!state.isCrawlerStopped) {
+      status.innerText = "Scan failed. Check console.";
+    }
   }
+  scanBtn.style.display = "inline-block";
   scanBtn.disabled = false;
+  document.getElementById("fullScanBtn").style.display = "inline-block";
   document.getElementById("fullScanBtn").disabled = false;
+  stopScanBtn.style.display = "none";
 };
+
+stopScanBtn.addEventListener("click", () => {
+  state.isCrawlerStopped = true;
+  stopScanBtn.disabled = true;
+  status.innerText = "Stopping scan... Finishing current requests.";
+});
 
 scanBtn.addEventListener("click", () => startScan(0));
 document.getElementById("fullScanBtn").addEventListener("click", () => startScan(1));
 
 async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null) {
+  if (state.isCrawlerStopped) return;
   const normUrl = normalizeUrl(url);
   try {
     const currentUrlObj = new URL(normUrl);
@@ -847,11 +870,13 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
     const scripts = extractScriptUrls(content, normUrl);
 
     for (const script of scripts) {
+      if (state.isCrawlerStopped) break;
       await recursiveScan(script, maxDepth, currentDepth, targetHost);
     }
 
     if (currentDepth < maxDepth) {
       for (const link of links) {
+        if (state.isCrawlerStopped) break;
         await recursiveScan(link, maxDepth, currentDepth + 1, targetHost);
       }
     }
@@ -1086,7 +1111,7 @@ probeBtn.onclick = async () => {
         proberStat404.innerText = stats[404];
         const resultItem = { path, status: "ERROR", fullUrl, length: 0 };
         proberData.push(resultItem);
-        
+
         if (doesItemMatchFilters(resultItem)) {
           renderProberLine(path, "ERROR", fullUrl, 0);
         }
@@ -1141,7 +1166,7 @@ function doesItemMatchFilters(item) {
   // 2. Check Length Filters (Include / Exclude)
   const incStrings = proberIncludeLength.value.split(',').map(s => s.trim()).filter(s => s !== "");
   const excStrings = proberExcludeLength.value.split(',').map(s => s.trim()).filter(s => s !== "");
-  
+
   const itemLenStr = String(item.length);
 
   // If include list has items, item.length MUST be in the list
@@ -1175,11 +1200,11 @@ function renderProberLine(path, status, fullUrl, length) {
   else if (status === 403 || status === 401) statusClass = "status-403"; // Orange
   else if (status === 404) statusClass = "status-404"; // Red (Specified)
 
-  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="margin-left:8px; color:#888; font-size:0.85em;">[${length}]</span>` : '';
+  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="margin-left:8px; color:var(--danger); font-size:0.85em;">[${length}]</span>` : '';
 
   let openBtnHtml = "";
   if (status === 200) {
-    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn">OPEN🔗</a>`;
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-200">OPEN🔗</a>`;
   } else if (status === 403 || status === 401) {
     openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-403">OPEN🔗</a>`;
   }
@@ -1188,8 +1213,8 @@ function renderProberLine(path, status, fullUrl, length) {
     <span class="prober-path">${path}</span>
     <div style="display: flex; align-items: center;">
       <span class="prober-status ${statusClass}">${status}</span>
-      ${lengthDisplay}
       ${openBtnHtml}
+      ${lengthDisplay}
     </div>
   `;
 
