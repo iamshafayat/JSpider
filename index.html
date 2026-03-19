@@ -48,147 +48,396 @@
   </script>
 
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="icon" href="favicon.png">
 </head>
 
 <body>
+  <!-- Background Elements -->
+  <div class="bg-wrapper">
+    <div class="bg-gradient"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-noise"></div>
+  </div>
+
+  <!-- ========== FLOATING NAVIGATION ========== -->
+  <nav class="floating-nav">
+    <a href="#" class="nav-logo">
+      <i class="fas fa-spider"></i>
+      <span>JSpider</span>
+      <span class="nav-badge">V2.0</span>
+    </a>
+    <div class="nav-divider"></div>
+    <div class="nav-links">
+      <button id="navCrawler" class="nav-link active">
+        <i class="fas fa-search"></i>
+        <span>Crawler</span>
+      </button>
+      <button id="navProber" class="nav-link">
+        <i class="fas fa-crosshairs"></i>
+        <span>Prober</span>
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <a href="https://github.com/iamshafayat/JSpider" target="_blank" rel="noopener noreferrer" class="nav-cta">
+      <i class="fab fa-github"></i>
+      <span>GitHub</span>
+    </a>
+  </nav>
+
+  <!-- Mobile Navigation -->
+  <nav class="mobile-nav">
+    <a href="#" class="mobile-logo">
+      <i class="fas fa-spider"></i>
+      <span>JSpider</span>
+      <span class="mobile-badge">V2.0</span>
+    </a>
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <button id="navCrawlerMobile" class="mobile-nav-link active">
+      <i class="fas fa-search"></i>
+      <span>Smart Crawler</span>
+    </button>
+    <button id="navProberMobile" class="mobile-nav-link">
+      <i class="fas fa-crosshairs"></i>
+      <span>Sensitive Path Prober</span>
+    </button>
+    <div class="mobile-divider"></div>
+    <a href="https://github.com/iamshafayat/JSpider" target="_blank" class="mobile-cta">
+      <i class="fab fa-github"></i>
+      <span>GitHub</span>
+    </a>
+  </div>
 
   <div class="wrapper">
-    <header>
-      <h1>🕷️ JSpider <span class="version">V2.0</span></h1>
-      <span class="blue-text-highlight">Advanced JavaScript Crawler & Endpoint Discovery</span>
-      <div class="header-description">
-        The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive
-        parameters, and hardcoded secrets instantly from any website — directly in your
-        browser.
-        <span class="recon-tagline">Built for recon - Fast, lightweight and 100% client-side.</span>
+    <!-- Hero Section -->
+    <header class="hero-section">
+      <div class="hero-badge glass-badge">
+        <i class="fas fa-bolt"></i>
+        <span>Advanced Reconnaissance Tool</span>
       </div>
-      <div class="tool-nav">
-        <button id="navCrawler" class="nav-btn active">Smart Crawler</button>
-        <button id="navProber" class="nav-btn">Sensitive Path Prober</button>
+      <h1 class="hero-title">
+        <span class="title-gradient">JSpider</span>
+      </h1>
+      <p class="hero-subtitle">JavaScript Crawler & Endpoint Discovery</p>
+      <p class="hero-description">
+        The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive
+        parameters, and hardcoded secrets instantly from any website — directly in your browser.
+      </p>
+      <div class="hero-features">
+        <div class="feature-chip glass-chip">
+          <i class="fas fa-rocket"></i>
+          <span>Lightning Fast</span>
+        </div>
+        <div class="feature-chip glass-chip">
+          <i class="fas fa-shield-halved"></i>
+          <span>100% Client-Side</span>
+        </div>
+        <div class="feature-chip glass-chip">
+          <i class="fas fa-lock"></i>
+          <span>Privacy Focused</span>
+        </div>
       </div>
     </header>
 
     <!-- Smart Crawler Section -->
     <div id="crawler-section">
+      <!-- Stats Dashboard -->
       <div class="dashboard-stats">
-        <div class="stat-card">
-          <span class="stat-label">Scanned</span>
-          <span id="stat-scanned" class="stat-value">0</span>
+        <div class="stat-card glass-card" data-color="blue">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-file-code"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Scanned</span>
+            <span id="stat-scanned" class="stat-value">0</span>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Endpoints</span>
-          <span id="stat-endpoints" class="stat-value">0</span>
+        <div class="stat-card glass-card" data-color="purple">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-link"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Endpoints</span>
+            <span id="stat-endpoints" class="stat-value">0</span>
+          </div>
         </div>
-        <div class="stat-card warning">
-          <span class="stat-label">Secrets</span>
-          <span id="stat-secrets" class="stat-value">0</span>
+        <div class="stat-card glass-card" data-color="orange">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-key"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Secrets</span>
+            <span id="stat-secrets" class="stat-value">0</span>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Files</span>
-          <span id="stat-files" class="stat-value">0</span>
+        <div class="stat-card glass-card" data-color="green">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Files</span>
+            <span id="stat-files" class="stat-value">0</span>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Parameters</span>
-          <span id="stat-parameters" class="stat-value">0</span>
+        <div class="stat-card glass-card" data-color="pink">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-crosshairs"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Parameters</span>
+            <span id="stat-parameters" class="stat-value">0</span>
+          </div>
         </div>
       </div>
 
-      <section class="scan-container">
+      <!-- Scan Container -->
+      <section class="scan-container glass-card glass-card-lg">
+        <div class="card-shine"></div>
+        <div class="card-header">
+          <div class="card-icon">
+            <i class="fas fa-satellite-dish"></i>
+          </div>
+          <div class="card-title">
+            <h2>Start Scanning</h2>
+            <p>Enter a URL to discover endpoints, secrets, and more</p>
+          </div>
+        </div>
+
         <div class="input-group">
-          <input id="urlInput" type="url" placeholder="https://example.com" autofocus required />
+          <div class="input-wrapper glass-input">
+            <i class="fas fa-globe input-icon"></i>
+            <input id="urlInput" type="url" placeholder="https://example.com" autofocus required />
+          </div>
           <div class="button-group">
-            <button id="scanBtn" title="Scan only this page and its JS">Scan Page</button>
-            <button id="fullScanBtn" class="primary-btn" title="Recursively scan the entire domain">Full Scan</button>
-            <button id="stopScanBtn" class="primary-btn" style="display: none; background: var(--danger);" title="Stop the scan">Stop Scan</button>
+            <button id="scanBtn" class="btn btn-secondary" title="Scan only this page and its JS">
+              <i class="fas fa-search"></i>
+              <span>Scan Page</span>
+            </button>
+            <button id="fullScanBtn" class="btn btn-primary" title="Recursively scan the entire domain">
+              <i class="fas fa-expand"></i>
+              <span>Full Scan</span>
+            </button>
+            <button id="stopScanBtn" class="btn btn-danger" style="display: none;" title="Stop the scan">
+              <i class="fas fa-stop"></i>
+              <span>Stop Scan</span>
+            </button>
           </div>
         </div>
 
         <div id="progress-container" class="progress-container" style="display: none;">
-          <div class="progress-bar-bg">
-            <div id="progress-bar" class="progress-bar"></div>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar-bg">
+              <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <span class="progress-percent">0%</span>
           </div>
-          <div id="status" class="status">Ready to scan...</div>
+          <div id="status" class="status">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Ready to scan...</span>
+          </div>
         </div>
       </section>
 
-      <section id="filter-section" class="filter-section" style="display: none;">
+      <!-- Filter Section -->
+      <section id="filter-section" class="filter-section glass-card" style="display: none;">
+        <div class="card-shine"></div>
         <div class="search-wrapper">
-          <input id="filterInput" placeholder="🔎 Filter results across all categories..." />
+          <i class="fas fa-search search-icon"></i>
+          <input id="filterInput" placeholder="Filter results across all categories..." />
         </div>
-        <div class="category-tabs">
-          <button class="tab-btn active" data-tab="all">All</button>
-          <button class="tab-btn" data-tab="endpoints">🔗 Endpoints</button>
-          <button class="tab-btn" data-tab="parameters">🎯 Parameters</button>
-          <button class="tab-btn" data-tab="secrets">🔑 Secrets</button>
-          <button class="tab-btn" data-tab="files">📂 Files</button>
+        <div class="category-tabs responsive-tabs">
+          <button class="tab-btn active" data-tab="all">
+            <i class="fas fa-layer-group"></i>
+            <span>All</span>
+          </button>
+          <button class="tab-btn" data-tab="endpoints">
+            <i class="fas fa-link"></i>
+            <span>Endpoints</span>
+          </button>
+          <button class="tab-btn" data-tab="parameters">
+            <i class="fas fa-crosshairs"></i>
+            <span>Parameters</span>
+          </button>
+          <button class="tab-btn" data-tab="secrets">
+            <i class="fas fa-key"></i>
+            <span>Secrets</span>
+          </button>
+          <button class="tab-btn" data-tab="files">
+            <i class="fas fa-folder"></i>
+            <span>Files</span>
+          </button>
         </div>
       </section>
 
+      <!-- Results Container -->
       <main id="results-container" class="results-container">
         <div id="results-all" class="tab-content active">
           <div id="results" class="results-grid"></div>
         </div>
       </main>
 
-      <section id="actions" class="export-actions" style="display: none;">
-        <div class="export-group">
-          <button id="exportTxt" title="Export as plain text">📄 .txt</button>
-          <button id="exportJson" title="Export as structured JSON">📁 .json</button>
-          <button id="exportCsv" title="Export as CSV for spreadsheets">📊 .csv</button>
-          <button id="exportMd" title="Export as Markdown report">📑 .md</button>
+      <!-- Export Actions -->
+      <section id="actions" class="export-section glass-card" style="display: none;">
+        <div class="card-shine"></div>
+
+        <div class="export-header">
+          <div class="export-icon">
+            <i class="fas fa-download"></i>
+          </div>
+          <div class="export-title">
+            <h3>Export Results</h3>
+            <p>Download your findings in your preferred format</p>
+          </div>
+        </div>
+
+        <div class="export-buttons">
+          <button id="exportTxt" class="export-btn" title="Export as plain text">
+            <i class="fas fa-file-lines"></i>
+            <span class="export-format">.txt</span>
+            <span class="export-desc">Plain Text</span>
+          </button>
+          <button id="exportJson" class="export-btn" title="Export as structured JSON">
+            <i class="fas fa-file-code"></i>
+            <span class="export-format">.json</span>
+            <span class="export-desc">Structured</span>
+          </button>
+          <button id="exportCsv" class="export-btn" title="Export as CSV for spreadsheets">
+            <i class="fas fa-file-csv"></i>
+            <span class="export-format">.csv</span>
+            <span class="export-desc">Spreadsheet</span>
+          </button>
+          <button id="exportMd" class="export-btn" title="Export as Markdown report">
+            <i class="fab fa-markdown"></i>
+            <span class="export-format">.md</span>
+            <span class="export-desc">Markdown</span>
+          </button>
         </div>
       </section>
-    </div> <!-- End Crawler Section -->
+    </div>
 
     <!-- Sensitive Path Prober Section -->
     <div id="prober-section" style="display: none;">
-      <section class="prober-container">
-        <div class="prober-header">
-          <h2>🔥 Sensitive Path Prober</h2>
-          <p>Manually check for critical files (.env, .git, config, etc.) on any domain.</p>
-        </div>
-
-        <!-- Prober Stats Dashboard -->
-        <div class="dashboard-stats" style="margin-bottom: 2rem;">
-          <div class="stat-card">
+      <!-- Prober Stats Dashboard -->
+      <div class="dashboard-stats prober-stats">
+        <div class="stat-card glass-card" data-color="green">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
             <span class="stat-label">Found (200)</span>
-            <span id="prober-stat-200" class="stat-value" style="color: var(--success);">0</span>
+            <span id="prober-stat-200" class="stat-value success-value">0</span>
           </div>
-          <div class="stat-card warning">
+        </div>
+        <div class="stat-card glass-card" data-color="orange">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-ban"></i>
+          </div>
+          <div class="stat-content">
             <span class="stat-label">Forbidden (403)</span>
-            <span id="prober-stat-403" class="stat-value" style="color: #ff851b;">0</span>
+            <span id="prober-stat-403" class="stat-value warning-value">0</span>
           </div>
-          <div class="stat-card danger">
+        </div>
+        <div class="stat-card glass-card" data-color="red">
+          <div class="stat-glow"></div>
+          <div class="stat-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="stat-content">
             <span class="stat-label">Missing (404)</span>
-            <span id="prober-stat-404" class="stat-value" style="color: var(--danger);">0</span>
+            <span id="prober-stat-404" class="stat-value danger-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prober Container -->
+      <section class="prober-container glass-card glass-card-lg prober-theme">
+        <div class="card-shine prober-shine"></div>
+        <div class="card-header">
+          <div class="card-icon prober-icon">
+            <i class="fas fa-crosshairs"></i>
+          </div>
+          <div class="card-title">
+            <h2>Sensitive Path Prober</h2>
+            <p>Check for critical files (.env, .git, config, etc.) on any domain</p>
           </div>
         </div>
 
         <div class="input-group">
-          <input id="proberUrlInput" type="url" placeholder="https://example.com" />
-          <button id="probeBtn" class="prober-btn">Check Paths</button>
-          <button id="stopProbeBtn" class="prober-btn" style="display: none; background: var(--danger);">Stop</button>
-        </div>
-        <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
-          <div class="progress-bar-bg">
-            <div id="prober-progress-bar" class="progress-bar" style="background: #ff4136;"></div>
+          <div class="input-wrapper glass-input prober-input">
+            <i class="fas fa-globe input-icon"></i>
+            <input id="proberUrlInput" type="url" placeholder="https://example.com" />
           </div>
-          <div id="prober-status" class="status" style="color: #ff4136;">Probing paths...</div>
+          <button id="probeBtn" class="btn btn-prober">
+            <i class="fas fa-bolt"></i>
+            <span>Check Paths</span>
+          </button>
+          <button id="stopProbeBtn" class="btn btn-danger" style="display: none;">
+            <i class="fas fa-stop"></i>
+            <span>Stop</span>
+          </button>
         </div>
 
-        <div id="prober-filter-section" class="category-tabs"
-          style="display: none; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
-          <button class="tab-btn active" data-prober-filter="all">All</button>
-          <button class="tab-btn" data-prober-filter="200">✅ Found (200)</button>
-          <button class="tab-btn" data-prober-filter="403">🟠 Forbidden (403)</button>
-          <button class="tab-btn" data-prober-filter="404">❌ Missing (404)</button>
+        <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar-bg">
+              <div id="prober-progress-bar" class="progress-bar prober-progress"></div>
+            </div>
+            <span class="progress-percent prober-percent">0%</span>
+          </div>
+          <div id="prober-status" class="status prober-status">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Probing paths...</span>
+          </div>
         </div>
 
-        <div id="prober-length-filters" class="input-group" style="display: none; margin-top: 1rem; gap: 10px;">
-          <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 200, 4236)" style="flex: 1;" />
-          <input id="proberExcludeLength" type="text" placeholder="Exclude Lengths (e.g. 404, 0)" style="flex: 1;" />
+        <!-- Responsive-tabs class and color-specific classes for prober tabs -->
+        <div id="prober-filter-section" class="category-tabs prober-tabs responsive-tabs"
+          style="display: none; margin-top: 1.5rem;">
+          <button class="tab-btn prober-tab-all active" data-prober-filter="all">
+            <i class="fas fa-layer-group"></i>
+            <span>All</span>
+          </button>
+          <button class="tab-btn prober-tab-200" data-prober-filter="200">
+            <i class="fas fa-check"></i>
+            <span>Found (200)</span>
+          </button>
+          <button class="tab-btn prober-tab-403" data-prober-filter="403">
+            <i class="fas fa-ban"></i>
+            <span>Unauthorized / Forbidden (401/403)</span>
+          </button>
+          <button class="tab-btn prober-tab-404" data-prober-filter="404">
+            <i class="fas fa-times"></i>
+            <span>Missing (404)</span>
+          </button>
+        </div>
+
+        <div id="prober-length-filters" class="length-filters" style="display: none; margin-top: 1rem;">
+          <div class="input-wrapper glass-input">
+            <i class="fas fa-plus-circle input-icon"></i>
+            <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 200, 4236)" />
+          </div>
+          <div class="input-wrapper glass-input">
+            <i class="fas fa-minus-circle input-icon"></i>
+            <input id="proberExcludeLength" type="text" placeholder="Exclude Lengths (e.g. 404, 0)" />
+          </div>
         </div>
 
         <div id="prober-results" class="prober-results-list" style="display: none;">
@@ -197,17 +446,72 @@
       </section>
     </div>
 
-    <footer>
-      <p>
-        Made with ❤️ by
-        <a href="https://www.linkedin.com/in/iamshafayat" target="_blank" rel="noopener noreferrer">
-          Shafayat Ahmed Alif</a>
-        for Security Researchers
-      </p>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-glass glass-card">
+        <p>
+          Made with <span class="heart">❤️</span> by
+          <a href="https://www.linkedin.com/in/iamshafayat" target="_blank" rel="noopener noreferrer">
+            Shafayat Ahmed Alif
+          </a> & <a href="https://www.linkedin.com/in/kazisabbir1337/" target="_blank" rel="noopener noreferrer">
+            Kazi Sabbir
+          </a>
+          for Security Researchers
+        </p>
+        <div class="footer-brand">
+          <i class="fas fa-spider"></i>
+          <span>JSpider V2.0</span>
+        </div>
+      </div>
     </footer>
   </div>
 
   <script src="script.js"></script>
+  <script>
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuBtn.addEventListener('click', function () {
+      this.classList.toggle('active');
+      mobileMenu.classList.toggle('active');
+    });
+
+    // Mobile nav sync with desktop nav
+    const navCrawlerMobile = document.getElementById('navCrawlerMobile');
+    const navProberMobile = document.getElementById('navProberMobile');
+
+    navCrawlerMobile?.addEventListener('click', function () {
+      document.getElementById('navCrawler').click();
+      navCrawlerMobile.classList.add('active');
+      navProberMobile.classList.remove('active');
+      mobileMenu.classList.remove('active');
+      mobileMenuBtn.classList.remove('active');
+    });
+
+    navProberMobile?.addEventListener('click', function () {
+      document.getElementById('navProber').click();
+      navProberMobile.classList.add('active');
+      navCrawlerMobile.classList.remove('active');
+      mobileMenu.classList.remove('active');
+      mobileMenuBtn.classList.remove('active');
+    });
+
+    // Sync desktop nav active states
+    document.getElementById('navCrawler')?.addEventListener('click', function () {
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      this.classList.add('active');
+      navCrawlerMobile?.classList.add('active');
+      navProberMobile?.classList.remove('active');
+    });
+
+    document.getElementById('navProber')?.addEventListener('click', function () {
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      this.classList.add('active');
+      navProberMobile?.classList.add('active');
+      navCrawlerMobile?.classList.remove('active');
+    });
+  </script>
 </body>
 
 </html>
