@@ -684,12 +684,11 @@ const excludedExtensions = [
   ".woff", ".woff2", ".ttf", ".otf", ".eot", ".sfnt",
   ".png", ".jpg", ".jpeg", ".svg", ".gif", ".ico", ".webp", ".bmp", ".apng", ".tif", ".tiff",
   ".css", ".less", ".sass",
-  ".map", ".txt",
+  ".map",
   ".mp4", ".m4v", ".webm", ".mp3", ".wav", ".ogg", ".flac",
-  ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".rtf",
-  ".zip", ".rar", ".tar", ".gz", ".7z",
-  ".exe", ".apk", ".ipa", ".dmg", ".bin", ".jar", ".class",
-  ".swf", ".log", ".tmp", ".bak", ".old", ".drag", ".brush", ".zoom", ".time", ".name", ".width", ".calcs"
+  ".xls", ".xlsx", ".csv", ".rtf",
+  ".apk", ".ipa", ".dmg", ".bin", ".jar", ".class",
+  ".swf", ".log", ".tmp", ".old", ".drag", ".brush", ".zoom", ".time", ".name", ".width", ".calcs"
 ];
 
 // BLOCK garbage/tracker domains
@@ -1197,10 +1196,11 @@ function renderProberLine(path, status, fullUrl, length) {
 
   let statusClass = "status-error"; // Default Red
   if (status === 200) statusClass = "status-200"; // Green
-  else if (status === 403 || status === 401) statusClass = "status-403"; // Orange
+  else if (status === 403) statusClass = "status-403"; // Orange
+  else if (status === 401) statusClass = "status-401"; // Dark Orange
   else if (status === 404) statusClass = "status-404"; // Red (Specified)
 
-  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="color:var(--danger); font-size:0.85em; font-family: monospace;">[${length}]</span>` : '';
+  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="color:var(--text-dim); font-size:0.85em; font-family: monospace;">[${length}]</span>` : '';
 
   let openBtnHtml = "";
   if (status === 200) {
