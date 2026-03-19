@@ -3,7 +3,7 @@
 
 <div align="center">
 
-![JSpider Interface Screenshot](JSpider-screenshot.png)
+![JSpider](JSpider-cover.png)
 
 **The ultimate client-side reconnaissance tool for security researchers. Extract hidden API routes, sensitive parameters, and hardcoded secrets instantly from any website.**
 
