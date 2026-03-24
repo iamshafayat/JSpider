@@ -64,6 +64,7 @@ const sensitivePaths = [
   '/live',
 
   // 🗂️ Version Control & Source Code
+  '/.git',
   '/.git/config',
   '/.git/HEAD',
   '/.git/index',
