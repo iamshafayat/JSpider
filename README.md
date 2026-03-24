@@ -105,6 +105,6 @@ This project is licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
-## 👤 Author
-Made with ❤️ by [Shafayat Ahmed Alif](https://www.linkedin.com/in/iamshafayat/).  
+## 👤 Authors
+Made with ❤️ by <b>[Shafayat Ahmed Alif](https://www.linkedin.com/in/iamshafayat/) & [Kazi Sabbir](https://www.linkedin.com/in/kazisabbir1337/)</b> for Security Researchers.  
 *Feel free to connect or suggest improvements.*
