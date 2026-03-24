@@ -753,7 +753,10 @@ const addResult = (source, type, value, line = 0) => {
 };
 
 const setProgress = (percent) => {
-  document.getElementById("progress-bar").style.width = `${percent}%`;
+  const p = Math.round(percent);
+  document.getElementById("progress-bar").style.width = `${p}%`;
+  const textEl = document.getElementById("progress-percent");
+  if (textEl) textEl.innerText = `${p}%`;
 };
 
 const startScan = async (maxDepth) => {
@@ -1052,6 +1055,8 @@ probeBtn.onclick = async () => {
     proberFilterSection.style.display = "flex"; // v2.0: Enable live filtering during scan
     proberLengthFilters.style.display = "flex"; // Show length filters
     proberProgressBar.style.width = "0%";
+    const probPercentEl = document.getElementById("prober-progress-percent");
+    if (probPercentEl) probPercentEl.innerText = "0%";
 
     // Reset Stats & Data
     proberData = [];
@@ -1074,8 +1079,10 @@ probeBtn.onclick = async () => {
         break;
       }
       completed++;
-      const percent = (completed / total) * 100;
+      const percent = Math.round((completed / total) * 100);
       proberProgressBar.style.width = percent + "%";
+      const probPercentEl = document.getElementById("prober-progress-percent");
+      if (probPercentEl) probPercentEl.innerText = percent + "%";
       proberStatus.innerText = `Probing: ${path} (${completed}/${total})`;
 
       // Ensure path starts with / but origin doesn't end with it
