@@ -700,7 +700,7 @@ const externalDomainsToIgnore = [
   "fonts.googleapis.com", "fonts.gstatic.com",
   "gstatic.com", "google.com", "googleapis.com",
   "googletagmanager.com", "googlesyndication.com", "google-analytics.com", "gtag/js",
-  "doubleclick.net", "cookielaw.org", "cdn.adobedtm.com", "scene7.com",
+  "doubleclick.net", "cookielaw.org", "cdn.adobedtm.com", "scene7.com", "w3.org",
   "akamaihd.net", "brightcove.net", "vidyard.com", "wistia.com",
   "newrelic.com", "datadoghq.com", "cloudflareinsights.com",
   "optimizely.com", "hotjar.com", "segment.com", "intercom.io",
