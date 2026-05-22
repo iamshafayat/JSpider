@@ -668,11 +668,21 @@ const secretPatterns = {
   "Facebook Access Token": /EAACEdEose0cBA[A-Z0-9]{20,}\b/g,
   "Google OAuth2 Access Token": /\bya29\.[a-z0-9_-]{30,}\b/g,
   "Slack Webhook": /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/g,
-  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g
+  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g,
+  "Azure Storage Key": /DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[A-Za-z0-9+/=]{88}/g,
+  "Digital Ocean Token": /dop_v1_[a-f0-9]{64}/g,
+  "GitLab PAT": /glpat-[0-9a-zA-Z\-_]{20}/g,
+  "GitHub App Token": /ghs_[0-9a-zA-Z]{36}/g,
+  "Stripe Test Key": /sk_test_[0-9a-zA-Z]{24,}/g,
+  "Square Access Token": /sq0atp-[0-9A-Za-z\-_]{22}/g,
+  "Redis URI": /redis(?:s)?:\/\/[^\s"'<>]+/g,
+  "Supabase Key": /sbp_[a-z0-9]{40}/g,
+  "NPM Token": /npm_[a-zA-Z0-9]{36}/g,
+  "Firebase DB URL": /https:\/\/[a-z0-9\-]+\.firebaseio\.com/g
 };
 
 // Fast-Path Check: Only run detailed regexes if one of these keywords is present
-const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks/i;
+const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_test_|sq0atp-|redis|sbp_|npm_|firebaseio/i;
 
 const blockedSecretKeywords = [
   "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
