@@ -651,9 +651,12 @@ const secretPatterns = {
   "Google API": /AIza[0-9A-Za-z\-_]{35}/g,
   "Stripe Live": /sk_live_[0-9a-zA-Z]{24,}/g,
   "GitHub PAT": /ghp_[0-9a-zA-Z]{36}/g,
+  "GitHub Fine-Grained PAT": /github_pat_[0-9a-zA-Z_]{82}/g,
+  "GitHub OAuth Access Token": /gho_[0-9a-zA-Z]{36}/g,
+  "GitHub Refresh Token": /ghr_[0-9a-zA-Z]{36}/g,
   "Slack Token": /xox[baprs]-[0-9a-zA-Z\-]{10,48}/g,
   "JWT": /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]+/g,
-  "Private Key": /-----BEGIN (?:RSA |EC )?PRIVATE KEY-----/g,
+  "Private Key": /-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY(?: BLOCK)?-----/g,
   "MongoDB": /mongodb(?:\+srv)?:\/\/[^\s"\'<>]+/g,
   "PostgreSQL": /postgres(?:ql)?:\/\/[^\s"\'<>]+/g,
   "Algolia Admin API Key": /algolia.{0,32}([a-z0-9]{32})\b/gi,
@@ -663,8 +666,6 @@ const secretPatterns = {
   "MySQL URI with Credentials": /mysql:\/\/[a-z0-9._%+\-]+:[^\s:@]+@(?:\[[0-9a-f:.]+\]|[a-z0-9.-]+)(?::\d{2,5})?(?:\/[^\s"\'?:]+)?(?:\?[^\s"\']*)?/g,
   "Segment Public API Token": /\bsgp_[A-Z0-9_-]{60,70}\b/g,
   "Segment API Key": /(?:segment|sgmt).{0,16}(?:secret|private|access|key|token).{0,16}([A-Z0-9_-]{40,50}\.[A-Z0-9_-]{40,50})/gi,
-  "Facebook App ID": /(?:facebook|fb).{0,8}(?:app|application).{0,16}(\d{15})\b/gi,
-  "Facebook Secret Key": /(?:facebook|fb).{0,32}(?:api|app|application|client|consumer|secret|key).{0,32}([a-z0-9]{32})\b/gi,
   "Facebook Access Token": /EAACEdEose0cBA[A-Z0-9]{20,}\b/g,
   "Google OAuth2 Access Token": /\bya29\.[a-z0-9_-]{30,}\b/g,
   "Slack Webhook": /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/g,
@@ -675,6 +676,11 @@ const secretPatterns = {
   "GitHub App Token": /ghs_[0-9a-zA-Z]{36}/g,
   "Stripe Test Key": /sk_test_[0-9a-zA-Z]{24,}/g,
   "Square Access Token": /sq0atp-[0-9A-Za-z\-_]{22}/g,
+  "Telegram Bot Token": /[0-9]{8,10}:[A-Za-z0-9_-]{35,}/g,
+  "SendGrid API Key": /SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}/g,
+  "Twilio Account SID": /AC[a-f0-9]{32}/g,
+  "Twilio API Key": /SK[a-f0-9]{32}/g,
+  "Heroku API Key": /[hH][eE][rR][oO][kK][uU].{0,16}(?:api|key|token).{0,16}([A-Za-z0-9-]{36})\b/gi,
   "Redis URI": /redis(?:s)?:\/\/[^\s"'<>]+/g,
   "Supabase Key": /sbp_[a-z0-9]{40}/g,
   "NPM Token": /npm_[a-zA-Z0-9]{36}/g,
@@ -682,7 +688,7 @@ const secretPatterns = {
 };
 
 // Fast-Path Check: Only run detailed regexes if one of these keywords is present
-const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_test_|sq0atp-|redis|sbp_|npm_|firebaseio/i;
+const secretTrigger = /AKIA|AIza|sk_live|ghp_|github_pat_|gh[or]_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_test_|sq0atp-|[0-9]{8,10}:|SG\.|AC[a-f0-9]{32}|heroku|redis|sbp_|npm_|firebaseio/i;
 
 const blockedSecretKeywords = [
   "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
@@ -851,7 +857,20 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
     status.innerText = `Scanning: ${normUrl}`;
     setProgress(Math.min(95, (state.scanned / 15) * 100));
 
-    const res = await fetch(proxyUrl(normUrl));
+    const headersObj = {};
+    const crawlerCookie = document.getElementById("crawlerCookieInput")?.value.trim();
+    const crawlerAuth = document.getElementById("crawlerAuthInput")?.value.trim();
+
+    if (crawlerCookie) {
+      headersObj["X-JSpider-Cookie"] = crawlerCookie;
+    }
+    if (crawlerAuth) {
+      headersObj["X-JSpider-Auth"] = crawlerAuth;
+    }
+
+    const res = await fetch(proxyUrl(normUrl), {
+      headers: headersObj
+    });
     if (!res.ok) return;
     const content = await res.text();
 
@@ -1101,8 +1120,22 @@ probeBtn.onclick = async () => {
       const fullUrl = origin + cleanPath;
       const proxyUrlWithTarget = `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
 
+      const headersObj = {};
+      const proberCookie = document.getElementById("proberCookieInput")?.value.trim();
+      const proberAuth = document.getElementById("proberAuthInput")?.value.trim();
+
+      if (proberCookie) {
+        headersObj["X-JSpider-Cookie"] = proberCookie;
+      }
+      if (proberAuth) {
+        headersObj["X-JSpider-Auth"] = proberAuth;
+      }
+
       try {
-        const res = await fetch(proxyUrlWithTarget, { method: 'GET' });
+        const res = await fetch(proxyUrlWithTarget, {
+          method: 'GET',
+          headers: headersObj
+        });
         const status = res.status;
         const text = await res.text();
         const length = text.length;
@@ -1393,3 +1426,30 @@ function downloadFile(filename, content, type) {
     document.body.removeChild(link);
   }, 0);
 }
+
+// Toggle Advanced Options in UI
+const toggleAdvancedCrawler = document.getElementById("toggleAdvancedCrawler");
+const advancedCrawlerContainer = document.getElementById("advancedCrawlerContainer");
+const crawlerArrow = document.getElementById("crawlerArrow");
+
+toggleAdvancedCrawler?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const isHidden = advancedCrawlerContainer.style.display === "none";
+  advancedCrawlerContainer.style.display = isHidden ? "flex" : "none";
+  if (crawlerArrow) {
+    crawlerArrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+  }
+});
+
+const toggleAdvancedProber = document.getElementById("toggleAdvancedProber");
+const advancedProberContainer = document.getElementById("advancedProberContainer");
+const proberArrow = document.getElementById("proberArrow");
+
+toggleAdvancedProber?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const isHidden = advancedProberContainer.style.display === "none";
+  advancedProberContainer.style.display = isHidden ? "flex" : "none";
+  if (proberArrow) {
+    proberArrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+  }
+});
