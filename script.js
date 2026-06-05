@@ -64,6 +64,7 @@ const sensitivePaths = [
   '/live',
 
   // 🗂️ Version Control & Source Code
+  '/.git',
   '/.git/config',
   '/.git/HEAD',
   '/.git/index',
@@ -667,11 +668,21 @@ const secretPatterns = {
   "Facebook Access Token": /EAACEdEose0cBA[A-Z0-9]{20,}\b/g,
   "Google OAuth2 Access Token": /\bya29\.[a-z0-9_-]{30,}\b/g,
   "Slack Webhook": /https:\/\/hooks\.slack\.com\/services\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Za-z0-9]+/g,
-  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g
+  "Discord Webhook": /https:\/\/discord(?:app)?\.com\/api\/webhooks\/[0-9]+\/[A-Za-z0-9_-]+/g,
+  "Azure Storage Key": /DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[A-Za-z0-9+/=]{88}/g,
+  "Digital Ocean Token": /dop_v1_[a-f0-9]{64}/g,
+  "GitLab PAT": /glpat-[0-9a-zA-Z\-_]{20}/g,
+  "GitHub App Token": /ghs_[0-9a-zA-Z]{36}/g,
+  "Stripe Test Key": /sk_test_[0-9a-zA-Z]{24,}/g,
+  "Square Access Token": /sq0atp-[0-9A-Za-z\-_]{22}/g,
+  "Redis URI": /redis(?:s)?:\/\/[^\s"'<>]+/g,
+  "Supabase Key": /sbp_[a-z0-9]{40}/g,
+  "NPM Token": /npm_[a-zA-Z0-9]{36}/g,
+  "Firebase DB URL": /https:\/\/[a-z0-9\-]+\.firebaseio\.com/g
 };
 
 // Fast-Path Check: Only run detailed regexes if one of these keywords is present
-const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks/i;
+const secretTrigger = /AKIA|AIza|sk_live|ghp_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_test_|sq0atp-|redis|sbp_|npm_|firebaseio/i;
 
 const blockedSecretKeywords = [
   "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
@@ -699,7 +710,7 @@ const externalDomainsToIgnore = [
   "fonts.googleapis.com", "fonts.gstatic.com",
   "gstatic.com", "google.com", "googleapis.com",
   "googletagmanager.com", "googlesyndication.com", "google-analytics.com", "gtag/js",
-  "doubleclick.net", "cookielaw.org", "cdn.adobedtm.com", "scene7.com",
+  "doubleclick.net", "cookielaw.org", "cdn.adobedtm.com", "scene7.com", "w3.org",
   "akamaihd.net", "brightcove.net", "vidyard.com", "wistia.com",
   "newrelic.com", "datadoghq.com", "cloudflareinsights.com",
   "optimizely.com", "hotjar.com", "segment.com", "intercom.io",
@@ -840,7 +851,20 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
     status.innerText = `Scanning: ${normUrl}`;
     setProgress(Math.min(95, (state.scanned / 15) * 100));
 
-    const res = await fetch(proxyUrl(normUrl));
+    const headersObj = {};
+    const crawlerCookie = document.getElementById("crawlerCookieInput")?.value.trim();
+    const crawlerAuth = document.getElementById("crawlerAuthInput")?.value.trim();
+
+    if (crawlerCookie) {
+      headersObj["X-JSpider-Cookie"] = crawlerCookie;
+    }
+    if (crawlerAuth) {
+      headersObj["X-JSpider-Auth"] = crawlerAuth;
+    }
+
+    const res = await fetch(proxyUrl(normUrl), {
+      headers: headersObj
+    });
     if (!res.ok) return;
     const content = await res.text();
 
@@ -1090,8 +1114,22 @@ probeBtn.onclick = async () => {
       const fullUrl = origin + cleanPath;
       const proxyUrlWithTarget = `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
 
+      const headersObj = {};
+      const proberCookie = document.getElementById("proberCookieInput")?.value.trim();
+      const proberAuth = document.getElementById("proberAuthInput")?.value.trim();
+
+      if (proberCookie) {
+        headersObj["X-JSpider-Cookie"] = proberCookie;
+      }
+      if (proberAuth) {
+        headersObj["X-JSpider-Auth"] = proberAuth;
+      }
+
       try {
-        const res = await fetch(proxyUrlWithTarget, { method: 'GET' });
+        const res = await fetch(proxyUrlWithTarget, {
+          method: 'GET',
+          headers: headersObj
+        });
         const status = res.status;
         const text = await res.text();
         const length = text.length;
@@ -1382,3 +1420,30 @@ function downloadFile(filename, content, type) {
     document.body.removeChild(link);
   }, 0);
 }
+
+// Toggle Advanced Options in UI
+const toggleAdvancedCrawler = document.getElementById("toggleAdvancedCrawler");
+const advancedCrawlerContainer = document.getElementById("advancedCrawlerContainer");
+const crawlerArrow = document.getElementById("crawlerArrow");
+
+toggleAdvancedCrawler?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const isHidden = advancedCrawlerContainer.style.display === "none";
+  advancedCrawlerContainer.style.display = isHidden ? "flex" : "none";
+  if (crawlerArrow) {
+    crawlerArrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+  }
+});
+
+const toggleAdvancedProber = document.getElementById("toggleAdvancedProber");
+const advancedProberContainer = document.getElementById("advancedProberContainer");
+const proberArrow = document.getElementById("proberArrow");
+
+toggleAdvancedProber?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const isHidden = advancedProberContainer.style.display === "none";
+  advancedProberContainer.style.display = isHidden ? "flex" : "none";
+  if (proberArrow) {
+    proberArrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+  }
+});
