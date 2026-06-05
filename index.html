@@ -124,7 +124,7 @@
     <header class="hero-section">
       <div class="hero-badge glass-badge">
         <i class="fas fa-bolt"></i>
-        <span>Advanced Reconnaissance Tool</span>
+        <span>Advanced Reconnaissance Tool-></span>
       </div>
       <h1 class="hero-title">
         <span class="title-gradient">JSpider</span>
@@ -237,6 +237,32 @@
               <i class="fas fa-stop"></i>
               <span>Stop Scan</span>
             </button>
+          </div>
+        </div>
+
+        <!-- Collapsible Authentication Details -->
+        <div class="advanced-toggle-wrapper"
+          style="margin-top: 1rem; width: 100%; display: flex; justify-content: flex-start; z-index: 2; position: relative;">
+          <button type="button" id="toggleAdvancedCrawler" class="btn btn-secondary"
+            style="padding: 10px 16px; font-size: 0.85rem; border-radius: var(--radius-full); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-key"></i>
+            <span>Authentication / Custom Headers (Optional)</span>
+            <i class="fas fa-chevron-down toggle-arrow" id="crawlerArrow"
+              style="transition: transform 0.3s ease; margin-left: 4px;"></i>
+          </button>
+        </div>
+
+        <div id="advancedCrawlerContainer" class="advanced-container"
+          style="display: none; margin-top: 1rem; flex-direction: column; gap: var(--space-md); width: 100%; z-index: 2; position: relative;">
+          <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; width: 100%;">
+            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+              <i class="fas fa-cookie input-icon"></i>
+              <input id="crawlerCookieInput" type="text" placeholder="Cookie Header Value (e.g. session=xyz)" />
+            </div>
+            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+              <i class="fas fa-lock input-icon"></i>
+              <input id="crawlerAuthInput" type="text" placeholder="Authorization Header Value (e.g. Bearer token)" />
+            </div>
           </div>
         </div>
 
@@ -393,6 +419,32 @@
             <i class="fas fa-stop"></i>
             <span>Stop</span>
           </button>
+        </div>
+
+        <!-- Collapsible Authentication Details for Prober -->
+        <div class="advanced-toggle-wrapper"
+          style="margin-top: 1rem; width: 100%; display: flex; justify-content: flex-start; z-index: 2; position: relative;">
+          <button type="button" id="toggleAdvancedProber" class="btn btn-secondary"
+            style="padding: 10px 16px; font-size: 0.85rem; border-radius: var(--radius-full); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fas fa-key"></i>
+            <span>Authentication / Custom Headers (Optional)</span>
+            <i class="fas fa-chevron-down toggle-arrow" id="proberArrow"
+              style="transition: transform 0.3s ease; margin-left: 4px;"></i>
+          </button>
+        </div>
+
+        <div id="advancedProberContainer" class="advanced-container"
+          style="display: none; margin-top: 1rem; flex-direction: column; gap: var(--space-md); width: 100%; z-index: 2; position: relative;">
+          <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; width: 100%;">
+            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+              <i class="fas fa-cookie input-icon"></i>
+              <input id="proberCookieInput" type="text" placeholder="Cookie Header Value (e.g. session=xyz)" />
+            </div>
+            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+              <i class="fas fa-lock input-icon"></i>
+              <input id="proberAuthInput" type="text" placeholder="Authorization Header Value (e.g. Bearer token)" />
+            </div>
+          </div>
         </div>
 
         <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
