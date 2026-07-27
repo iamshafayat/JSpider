@@ -638,7 +638,50 @@ const directoryfyUrl = (url) => {
   return url;
 };
 
-const proxyUrl = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
+/* ── CORS PROXY — try multiple, return first success ── */
+const CLOUDFLARE_PROXY = (url) => `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(url)}`;
+
+const PROXY_LIST = [
+    CLOUDFLARE_PROXY,
+    (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    (url) => `https://cors.eu.org/${url}`,
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
+
+// Large-response proxy list — skips corsproxy.io which has a payload size cap (413)
+const PROXY_LIST_LARGE = [
+    CLOUDFLARE_PROXY,
+    (url) => `https://cors.eu.org/${url}`,
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url) => `https://thingproxy.freeboard.io/fetch/${url}`,
+    (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+];
+
+async function proxyFetch(url, options = {}, large = false) {
+    const list = large ? PROXY_LIST_LARGE : PROXY_LIST;
+    let lastError;
+    for (const buildUrl of list) {
+        try {
+            const proxied = buildUrl(url);
+            const res = await fetch(proxied, {
+                ...options,
+                signal: AbortSignal.timeout(20000)
+            });
+            if (res.status >= 500 || res.status === 413) {
+                lastError = new Error(`Proxy ${res.status}`);
+                continue;
+            }
+            return res;
+        } catch (e) {
+            lastError = e;
+            continue;
+        }
+    }
+    throw lastError;
+}
 
 const endpointRegex = new RegExp(
   `(?:"|')((?:[a-zA-Z]{1,10}:\\/\\/|\\/\\/)[^"']*?|(?:\\/|\\.\\/|\\.\\.\\/)[^"'\\s<>]+|[a-zA-Z0-9_\\-/]+\\.[a-z]{1,5}(?:\\?[^"'\\s]*)?)(?:"|')`,
@@ -868,9 +911,7 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
       headersObj["X-JSpider-Auth"] = crawlerAuth;
     }
 
-    const res = await fetch(proxyUrl(normUrl), {
-      headers: headersObj
-    });
+    const res = await proxyFetch(normUrl, { headers: headersObj }, true);
     if (!res.ok) return;
     const content = await res.text();
 
@@ -1118,24 +1159,8 @@ probeBtn.onclick = async () => {
       // Ensure path starts with / but origin doesn't end with it
       const cleanPath = path.startsWith("/") ? path : "/" + path;
       const fullUrl = origin + cleanPath;
-      const proxyUrlWithTarget = `https://aged-unit-e2e8.iamshafayat.workers.dev/?url=${encodeURIComponent(fullUrl)}`;
-
-      const headersObj = {};
-      const proberCookie = document.getElementById("proberCookieInput")?.value.trim();
-      const proberAuth = document.getElementById("proberAuthInput")?.value.trim();
-
-      if (proberCookie) {
-        headersObj["X-JSpider-Cookie"] = proberCookie;
-      }
-      if (proberAuth) {
-        headersObj["X-JSpider-Auth"] = proberAuth;
-      }
-
       try {
-        const res = await fetch(proxyUrlWithTarget, {
-          method: 'GET',
-          headers: headersObj
-        });
+        const res = await fetch(CLOUDFLARE_PROXY(fullUrl), { method: 'GET' });
         const status = res.status;
         const text = await res.text();
         const length = text.length;
@@ -1441,15 +1466,4 @@ toggleAdvancedCrawler?.addEventListener("click", (e) => {
   }
 });
 
-const toggleAdvancedProber = document.getElementById("toggleAdvancedProber");
-const advancedProberContainer = document.getElementById("advancedProberContainer");
-const proberArrow = document.getElementById("proberArrow");
 
-toggleAdvancedProber?.addEventListener("click", (e) => {
-  e.preventDefault();
-  const isHidden = advancedProberContainer.style.display === "none";
-  advancedProberContainer.style.display = isHidden ? "flex" : "none";
-  if (proberArrow) {
-    proberArrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
-  }
-});

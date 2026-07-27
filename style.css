@@ -1605,6 +1605,15 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
+/* ==================== ADVANCED TOGGLE BUTTON ==================== */
+.advanced-toggle-btn {
+  white-space: nowrap;
+}
+
+.advanced-toggle-btn span {
+  text-align: left;
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
   .floating-nav {
@@ -1748,6 +1757,14 @@ body {
   .glass-card {
     padding: var(--space-md);
     border-radius: var(--radius-lg);
+  }
+
+  .advanced-toggle-btn {
+    white-space: normal;
+    word-break: break-word;
+    text-align: left;
+    width: 100%;
+    justify-content: center;
   }
 
   .export-buttons {
