@@ -6,9 +6,7 @@ const exportActions = document.getElementById("actions");
 const exportTxt = document.getElementById("exportTxt");
 const exportJson = document.getElementById("exportJson");
 
-const allResults = [];
-const scannedJs = new Set(); // avoid duplicate scans across sources
-console.log("%c🕷️ JSpider V2.0 Initialized", "color: #0dcaf0; font-weight: bold; font-size: 1.2rem;");
+console.log("%c🕷️ JSpider V2.1 Initialized", "color: #0dcaf0; font-weight: bold; font-size: 1.2rem;");
 
 const sensitivePaths = [
   // 🌐 Standard .well-known files
@@ -397,7 +395,6 @@ const sensitivePaths = [
 
   // 🧪 Test & Development Files
   '/test',
-  '/test.php',
   '/test.html',
   '/testing',
   '/dev',
@@ -430,7 +427,6 @@ const sensitivePaths = [
   '/help/',
 
   // 🌍 CMS Specific (WordPress, Joomla, Drupal)
-  '/wp-config.php',
   '/wp-content/debug.log',
   '/wp-json/wp/v2/users',
   '/wp-includes/',
@@ -438,7 +434,6 @@ const sensitivePaths = [
   '/wp-login.php',
   '/license.txt',
   '/readme.html',
-  '/configuration.php',
   '/administrator/manifests/files/joomla.xml',
   '/user/login',
   '/install.php',
@@ -753,6 +748,10 @@ const secretPatterns = {
   "Heroku API Key": /[hH][eE][rR][oO][kK][uU].{0,16}(?:api|key|token).{0,16}([A-Za-z0-9-]{36})\b/gi,
   "Redis URI": /redis(?:s)?:\/\/[^\s"'<>]+/g,
   "Supabase Key": /sbp_[a-z0-9]{40}/g,
+  "Supabase Secret Key": /\bsb_secret_[A-Za-z0-9_-]{20,}\b/g,
+  "Supabase Publishable Key": /\bsb_publishable_[A-Za-z0-9_-]{20,}\b/g,
+  "Anthropic API Key": /\bsk-ant-(?:api03|admin01)-[A-Za-z0-9_-]{93}AA\b/g,
+  "OpenAI API Key": /\bsk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}T3BlbkFJ[A-Za-z0-9_-]{20,}\b/g,
   "NPM Token": /npm_[a-zA-Z0-9]{36}/g,
   "Firebase DB URL": /https:\/\/[a-z0-9\-]+\.firebaseio\.com/g
 };
@@ -814,9 +813,41 @@ const state = {
   parameters: new Set(),
   allData: [], // { source, type, value, line }
   scannedUrls: new Set(),
-  probedDomains: new Set(),
+  queued: new Set(), // every in-scope URL discovered so far (scanned + pending)
+  completed: 0,
+  currentUrl: "",
   isScanning: false,
   isCrawlerStopped: false
+};
+
+const filterInput = document.getElementById("filterInput");
+
+const getActiveTab = () => document.querySelector("#crawler-section .tab-btn.active").dataset.tab;
+const renderCurrentView = () => renderResults(filterInput.value, getActiveTab());
+
+// Live rendering: re-render at most every 300ms while results stream in
+let renderTimer = null;
+const scheduleRender = () => {
+  if (renderTimer) return;
+  renderTimer = setTimeout(() => {
+    renderTimer = null;
+    renderCurrentView();
+  }, 300);
+};
+
+const isInScope = (url, targetHost) => {
+  try {
+    const host = new URL(url).hostname;
+    return host === targetHost || host.endsWith("." + targetHost);
+  } catch { return false; }
+};
+
+const updateProgress = () => {
+  const total = state.queued.size;
+  setProgress(total ? Math.min(99, (state.completed / total) * 100) : 0);
+  if (!state.isCrawlerStopped && state.currentUrl) {
+    status.innerText = `[${state.completed}/${total}] Scanning: ${state.currentUrl}`;
+  }
 };
 
 const updateStats = () => {
@@ -837,6 +868,7 @@ const addResult = (source, type, value, line = 0) => {
   if (type === "file") state.files.add(value);
   if (type === "parameter") state.parameters.add(value);
   updateStats();
+  scheduleRender();
 };
 
 const setProgress = (percent) => {
@@ -859,39 +891,45 @@ const startScan = async (maxDepth) => {
   state.parameters.clear();
   state.allData = [];
   state.scannedUrls.clear();
-  scannedJs.clear(); // Reset JS scan cache
+  state.queued.clear();
+  state.queued.add(siteUrl);
+  state.completed = 0;
+  state.currentUrl = "";
   updateStats();
 
-  results.innerHTML = "";
   scanBtn.style.display = "none";
   document.getElementById("fullScanBtn").style.display = "none";
   stopScanBtn.style.display = "inline-block";
   stopScanBtn.disabled = false;
   state.isCrawlerStopped = false;
+  state.isScanning = true;
 
   document.getElementById("progress-container").style.display = "block";
-  document.getElementById("filter-section").style.display = "none";
+  document.getElementById("filter-section").style.display = "block";
   exportActions.style.display = "none";
+  renderCurrentView();
   status.innerText = maxDepth === 0 ? "Scanning single page..." : "Starting full recursive scan...";
-  setProgress(5);
+  updateProgress();
 
   try {
     await recursiveScan(siteUrl, maxDepth);
     if (!state.isCrawlerStopped) {
-      status.innerText = "Scan complete!";
+      status.innerText = `Scan complete! ${state.completed} URLs scanned.`;
     } else {
-      status.innerText = "Scan stopped manually.";
+      status.innerText = `Scan stopped manually. ${state.completed}/${state.queued.size} URLs scanned.`;
     }
     setProgress(100);
-    document.getElementById("filter-section").style.display = "block";
     exportActions.style.display = "flex";
-    renderResults();
   } catch (e) {
     console.error(e);
     if (!state.isCrawlerStopped) {
       status.innerText = "Scan failed. Check console.";
     }
   }
+  state.isScanning = false;
+  clearTimeout(renderTimer);
+  renderTimer = null;
+  renderCurrentView();
   scanBtn.style.display = "inline-block";
   scanBtn.disabled = false;
   document.getElementById("fullScanBtn").style.display = "inline-block";
@@ -912,21 +950,21 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
   if (state.isCrawlerStopped) return;
   const normUrl = normalizeUrl(url);
   try {
-    const currentUrlObj = new URL(normUrl);
-    if (!targetHost) targetHost = currentUrlObj.hostname;
+    if (!targetHost) targetHost = new URL(normUrl).hostname;
+  } catch { return; }
 
-    if (currentUrlObj.hostname !== targetHost && !currentUrlObj.hostname.endsWith("." + targetHost)) {
-      return;
-    }
+  if (!isInScope(normUrl, targetHost)) return;
+  if (currentDepth > maxDepth || state.scannedUrls.has(normUrl)) return;
+  state.scannedUrls.add(normUrl);
+  state.queued.add(normUrl);
+  state.scanned++;
+  state.currentUrl = normUrl;
+  updateStats();
+  updateProgress();
 
-    if (currentDepth > maxDepth || state.scannedUrls.has(normUrl)) return;
-    state.scannedUrls.add(normUrl);
-    state.scanned++;
-    updateStats();
-
-    status.innerText = `Scanning: ${normUrl}`;
-    setProgress(Math.min(95, (state.scanned / 15) * 100));
-
+  let links = [];
+  let scripts = [];
+  try {
     const headersObj = {};
     const crawlerCookie = document.getElementById("crawlerCookieInput")?.value.trim();
     const crawlerAuth = document.getElementById("crawlerAuthInput")?.value.trim();
@@ -966,22 +1004,27 @@ async function recursiveScan(url, maxDepth, currentDepth = 0, targetHost = null)
     });
 
     // Discover more links/scripts
-    const links = extractInternalLinks(content, normUrl);
-    const scripts = extractScriptUrls(content, normUrl);
-
-    for (const script of scripts) {
-      if (state.isCrawlerStopped) break;
-      await recursiveScan(script, maxDepth, currentDepth, targetHost);
-    }
-
-    if (currentDepth < maxDepth) {
-      for (const link of links) {
-        if (state.isCrawlerStopped) break;
-        await recursiveScan(link, maxDepth, currentDepth + 1, targetHost);
-      }
-    }
+    scripts = extractScriptUrls(content, normUrl);
+    links = currentDepth < maxDepth ? extractInternalLinks(content, normUrl) : [];
+    [...scripts, ...links].forEach(u => {
+      const n = normalizeUrl(u);
+      if (isInScope(n, targetHost)) state.queued.add(n);
+    });
   } catch (e) {
     console.warn(`Failed to scan ${normUrl}:`, e);
+  } finally {
+    state.completed++;
+    updateProgress();
+  }
+
+  for (const script of scripts) {
+    if (state.isCrawlerStopped) break;
+    await recursiveScan(script, maxDepth, currentDepth, targetHost);
+  }
+
+  for (const link of links) {
+    if (state.isCrawlerStopped) break;
+    await recursiveScan(link, maxDepth, currentDepth + 1, targetHost);
   }
 }
 
@@ -1303,21 +1346,21 @@ function renderProberLine(path, status, fullUrl, length) {
   else if (status === 401) statusClass = "status-401"; // Dark Orange
   else if (status === 404) statusClass = "status-404"; // Red (Specified)
 
-  const lengthDisplay = length !== undefined ? `<span class="prober-length" style="color:var(--text-dim); font-size:0.85em; font-family: monospace;">[${length}]</span>` : '';
+  const lengthDisplay = length !== undefined ? `<span class="prober-length">[${length}]</span>` : '';
 
   let openBtnHtml = "";
   if (status === 200) {
-    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-200" style="margin-left: 0;">OPEN🔗</a>`;
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="prober-open-btn-200">OPEN🔗</a>`;
   } else if (status === 403 || status === 401) {
-    openBtnHtml = `<a href="${fullUrl}" target="_blank" class="prober-open-btn-403" style="margin-left: 0;">OPEN🔗</a>`;
+    openBtnHtml = `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="prober-open-btn-403">OPEN🔗</a>`;
   }
 
   line.innerHTML = `
-    <span class="prober-path" style="flex: 1; word-break: break-all; padding-right: 15px;">${path}</span>
-    <div style="display: flex; align-items: center; justify-content: flex-end; flex-shrink: 0;">
-      <span class="prober-status ${statusClass}" style="width: 50px; text-align: center;">${status}</span>
-      <div style="width: 75px; text-align: center; margin-left: 5px;">${openBtnHtml}</div>
-      <div style="width: 75px; text-align: right; margin-left: 5px;">${lengthDisplay}</div>
+    <span class="prober-path">${path}</span>
+    <div class="prober-meta">
+      <span class="prober-status ${statusClass}">${status}</span>
+      <div class="prober-open-cell">${openBtnHtml}</div>
+      <div class="prober-length-cell">${lengthDisplay}</div>
     </div>
   `;
 
@@ -1352,23 +1395,33 @@ function filterUrl(url) {
 
 function renderResults(filter = "", category = "all") {
   results.innerHTML = "";
-  const grouped = {};
+  const needle = filter.toLowerCase();
+  // source -> Map(value -> { type, value, lines:Set })
+  const grouped = new Map();
 
   state.allData.forEach(item => {
     if (category !== "all" && item.type !== category.slice(0, -1)) return;
-    if (filter && !item.value.toLowerCase().includes(filter.toLowerCase())) return;
+    if (needle && !item.value.toLowerCase().includes(needle)) return;
 
-    if (!grouped[item.source]) grouped[item.source] = [];
-    grouped[item.source].push(item);
+    if (!grouped.has(item.source)) grouped.set(item.source, new Map());
+    const entries = grouped.get(item.source);
+    // Collapse duplicates: same value in the same source becomes one row
+    if (!entries.has(item.value)) entries.set(item.value, { type: item.type, value: item.value, lines: new Set() });
+    entries.get(item.value).lines.add(item.line);
   });
 
-  const sourceEntries = Object.entries(grouped);
-  if (sourceEntries.length === 0) {
-    results.innerHTML = "<div class='status'>No results found matching your criteria.</div>";
+  if (grouped.size === 0) {
+    const msg = state.isScanning ? "Scanning... results will appear here live." : "No results found matching your criteria.";
+    results.innerHTML = `<div class='status'>${msg}</div>`;
     return;
   }
 
-  for (const [source, items] of sourceEntries) {
+  if (category === "parameters") {
+    const namesCard = renderParamNamesCard(grouped);
+    if (namesCard) results.appendChild(namesCard);
+  }
+
+  for (const [source, entries] of grouped) {
     const card = document.createElement("div");
     card.className = "card";
     const title = document.createElement("h3");
@@ -1376,40 +1429,149 @@ function renderResults(filter = "", category = "all") {
     card.appendChild(title);
 
     const list = document.createElement("ol");
-    items.forEach(item => {
-      const li = document.createElement("li");
-
-      const lineSpan = document.createElement("span");
-      lineSpan.className = "line-number";
-      lineSpan.innerText = `[L${item.line}]`;
-
-      const span = document.createElement("span");
-      span.className = `endpoint-text ${item.type === 'secret' ? 'secret-item' : ''}`;
-      span.innerText = item.value;
-
-      const copyBtn = document.createElement("button");
-      copyBtn.className = "copy-btn";
-      copyBtn.innerHTML = "📋";
-      copyBtn.onclick = () => copyToClipboard(item.value, copyBtn);
-
-      li.appendChild(lineSpan);
-      li.appendChild(span);
-      li.appendChild(copyBtn);
-      list.appendChild(li);
-    });
+    for (const entry of entries.values()) {
+      list.appendChild(renderResultItem(source, entry));
+    }
     card.appendChild(list);
     results.appendChild(card);
   }
 }
 
+function renderResultItem(source, entry) {
+  const li = document.createElement("li");
+  const lines = [...entry.lines].sort((a, b) => a - b);
+
+  const lineSpan = document.createElement("span");
+  lineSpan.className = "line-number";
+  lineSpan.innerText = `[L${lines[0]}]`;
+
+  const span = document.createElement("span");
+  span.className = `endpoint-text ${entry.type === 'secret' ? 'secret-item' : ''}`;
+  span.innerText = entry.value;
+
+  li.appendChild(lineSpan);
+  li.appendChild(span);
+
+  if (lines.length > 1) {
+    const badge = document.createElement("span");
+    badge.className = "dup-badge";
+    badge.innerText = `${lines.length} places`;
+    badge.title = `Found in ${lines.length} places: ${lines.map(l => "L" + l).join(", ")}`;
+    li.appendChild(badge);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "result-actions";
+
+  const copyBtn = actionButton("fa-copy", "Copy value");
+  copyBtn.onclick = () => copyToClipboard(entry.value, copyBtn);
+  actions.appendChild(copyBtn);
+
+  const fullUrl = entry.type !== "secret" ? resolveUrl(entry.value, source) : null;
+  if (fullUrl) {
+    const openLink = document.createElement("a");
+    openLink.className = "copy-btn";
+    openLink.href = fullUrl;
+    openLink.target = "_blank";
+    openLink.rel = "noopener noreferrer";
+    openLink.title = `Open ${fullUrl}`;
+    openLink.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i>';
+
+    const urlBtn = actionButton("fa-link", "Copy full URL");
+    urlBtn.onclick = () => copyToClipboard(fullUrl, urlBtn);
+
+    const curlBtn = actionButton("fa-terminal", "Copy as curl");
+    curlBtn.onclick = () => copyToClipboard(buildCurl(fullUrl), curlBtn);
+
+    actions.appendChild(openLink);
+    actions.appendChild(urlBtn);
+    actions.appendChild(curlBtn);
+  }
+
+  li.appendChild(actions);
+  return li;
+}
+
+function actionButton(icon, title) {
+  const btn = document.createElement("button");
+  btn.className = "copy-btn";
+  btn.title = title;
+  btn.innerHTML = `<i class="fas ${icon}"></i>`;
+  return btn;
+}
+
+// Resolve a found path against the file it was found in; only http(s) results are actionable
+function resolveUrl(value, source) {
+  try {
+    const u = new URL(value, source);
+    return /^https?:$/.test(u.protocol) ? u.href : null;
+  } catch { return null; }
+}
+
+function buildCurl(url) {
+  const quote = (s) => `'${s.replace(/'/g, `'\\''`)}'`;
+  const parts = ["curl", "-i", quote(url)];
+  const cookie = document.getElementById("crawlerCookieInput")?.value.trim();
+  const auth = document.getElementById("crawlerAuthInput")?.value.trim();
+  if (cookie) parts.push("-H", quote(`Cookie: ${cookie}`));
+  if (auth) parts.push("-H", quote(`Authorization: ${auth}`));
+  return parts.join(" ");
+}
+
+function getParamNames(value) {
+  const query = value.split("?").slice(1).join("?").split("#")[0];
+  return query.split("&")
+    .map(pair => {
+      const name = pair.split("=")[0];
+      try { return decodeURIComponent(name).trim(); } catch { return name.trim(); }
+    })
+    .filter(Boolean);
+}
+
+function renderParamNamesCard(grouped) {
+  const counts = new Map();
+  for (const entries of grouped.values()) {
+    for (const entry of entries.values()) {
+      new Set(getParamNames(entry.value)).forEach(name => counts.set(name, (counts.get(name) || 0) + 1));
+    }
+  }
+  if (counts.size === 0) return null;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  const title = document.createElement("h3");
+  title.innerText = `Unique Parameter Names (${counts.size})`;
+  card.appendChild(title);
+
+  const wrap = document.createElement("div");
+  wrap.className = "param-names";
+  [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
+    const chip = document.createElement("button");
+    chip.className = "param-chip";
+    chip.title = `Filter by "${name}"`;
+    chip.textContent = name;
+    const countEl = document.createElement("span");
+    countEl.textContent = count;
+    chip.appendChild(countEl);
+    chip.onclick = () => {
+      filterInput.value = name;
+      renderCurrentView();
+    };
+    wrap.appendChild(chip);
+  });
+  card.appendChild(wrap);
+  return card;
+}
+
 async function copyToClipboard(text, btn) {
   try {
     await navigator.clipboard.writeText(text);
+    if (!btn.dataset.html) btn.dataset.html = btn.innerHTML;
     btn.classList.add("copied");
-    btn.innerText = "✅";
+    btn.innerHTML = '<i class="fas fa-check"></i>';
     setTimeout(() => {
       btn.classList.remove("copied");
-      btn.innerText = "📋";
+      btn.innerHTML = btn.dataset.html;
     }, 2000);
   } catch { }
 }
@@ -1419,14 +1581,11 @@ document.querySelectorAll("#crawler-section .tab-btn").forEach(btn => {
   btn.onclick = () => {
     document.querySelector("#crawler-section .tab-btn.active").classList.remove("active");
     btn.classList.add("active");
-    renderResults(document.getElementById("filterInput").value, btn.dataset.tab);
+    renderCurrentView();
   };
 });
 
-document.getElementById("filterInput").oninput = (e) => {
-  const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
-  renderResults(e.target.value, activeTab);
-};
+filterInput.oninput = () => renderCurrentView();
 
 // Advanced Exports
 const exportCsv = document.getElementById("exportCsv");

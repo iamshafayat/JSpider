@@ -242,25 +242,21 @@
         </div>
 
         <!-- Collapsible Authentication Details -->
-        <div class="advanced-toggle-wrapper"
-          style="margin-top: 1rem; width: 100%; display: flex; justify-content: flex-start; z-index: 2; position: relative;">
-          <button type="button" id="toggleAdvancedCrawler" class="btn btn-secondary advanced-toggle-btn"
-            style="padding: 10px 16px; font-size: 0.85rem; border-radius: var(--radius-full); cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <div class="advanced-toggle-wrapper">
+          <button type="button" id="toggleAdvancedCrawler" class="btn btn-secondary advanced-toggle-btn">
             <i class="fas fa-key"></i>
             <span>Authentication / Custom Headers (Optional)</span>
-            <i class="fas fa-chevron-down toggle-arrow" id="crawlerArrow"
-              style="transition: transform 0.3s ease; margin-left: 4px;"></i>
+            <i class="fas fa-chevron-down toggle-arrow" id="crawlerArrow"></i>
           </button>
         </div>
 
-        <div id="advancedCrawlerContainer" class="advanced-container"
-          style="display: none; margin-top: 1rem; flex-direction: column; gap: var(--space-md); width: 100%; z-index: 2; position: relative;">
-          <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; width: 100%;">
-            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+        <div id="advancedCrawlerContainer" class="advanced-container" style="display: none;">
+          <div class="advanced-fields">
+            <div class="input-wrapper glass-input">
               <i class="fas fa-cookie input-icon"></i>
               <input id="crawlerCookieInput" type="text" placeholder="Cookie Header Value (e.g. session=xyz)" />
             </div>
-            <div class="input-wrapper glass-input" style="flex: 1; min-width: 200px;">
+            <div class="input-wrapper glass-input">
               <i class="fas fa-lock input-icon"></i>
               <input id="crawlerAuthInput" type="text" placeholder="Authorization Header Value (e.g. Bearer token)" />
             </div>
@@ -422,7 +418,7 @@
           </button>
         </div>
 
-        <div id="prober-progress-container" class="progress-container" style="display: none; margin-top: 1.5rem;">
+        <div id="prober-progress-container" class="progress-container" style="display: none;">
           <div class="progress-bar-wrapper">
             <div class="progress-bar-bg">
               <div id="prober-progress-bar" class="progress-bar prober-progress"></div>
@@ -436,8 +432,7 @@
         </div>
 
         <!-- Responsive-tabs class and color-specific classes for prober tabs -->
-        <div id="prober-filter-section" class="category-tabs prober-tabs responsive-tabs"
-          style="display: none; margin-top: 1.5rem;">
+        <div id="prober-filter-section" class="category-tabs prober-tabs responsive-tabs" style="display: none;">
           <button class="tab-btn prober-tab-all active" data-prober-filter="all">
             <i class="fas fa-layer-group"></i>
             <span>All</span>
@@ -456,7 +451,7 @@
           </button>
         </div>
 
-        <div id="prober-length-filters" class="length-filters" style="display: none; margin-top: 1rem;">
+        <div id="prober-length-filters" class="length-filters" style="display: none;">
           <div class="input-wrapper glass-input">
             <i class="fas fa-plus-circle input-icon"></i>
             <input id="proberIncludeLength" type="text" placeholder="Include Lengths (e.g. 200, 4236)" />
