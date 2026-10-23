@@ -32,6 +32,7 @@ JSpider V2.1 expands secret detection and refines the reconnaissance suite with 
 - **Precision Secret Detection**: High-fidelity regex for **40 patterns** including AWS, Google Cloud, Stripe, Slack/Discord Webhooks, JWT, Telegram, Twilio, and more.
 - **High-Fidelity Mapping**: Captures raw file paths and absolute URLs without truncation, preserving double slashes and complex structures.
 - **Authentication Headers**: Crawl behind login pages inject session cookies or Bearer tokens to scan authenticated dashboards, admin panels, and internal tools that general scanners miss.
+- **CORS Proxy Fallback**: Smart Crawler automatically rotates through 6 CORS proxy services if the primary Cloudflare Worker is blocked (e.g., by Akamai). Smart selection avoids proxies with payload size caps for large responses.
 - **Parameters Dashboard**: Live tracking, filtering, and sorting of URL parameters alongside Endpoints, Secrets, and Files.
 
 ---
@@ -58,6 +59,7 @@ It extracts data from external JS files, inline scripts, and HTML source code - 
 | 🛡️ **Path Prober** | Automated check for 500+ paths with live response lengths, status filters, include/exclude length filtering, and stop controls. |
 | 🎯 **Result Filtering** | Instantly sort findings into Endpoints, Parameters, Secrets, and Files with a global search filter. |
 | 🔐 **Auth Headers** | Crawl dashboard panels & authenticated pages that general scanners miss. Inject session cookies or Bearer tokens to access protected endpoints - just paste your Cookie or Authorization header value. |
+| 🔁 **Proxy Fallback** | Smart Crawler auto-rotates through 6 CORS proxies if Cloudflare Worker is blocked. Smart large-response handling avoids payload-limited proxies. |
 | 📄 **Advanced Export** | Export to `.txt`, `.json`, `.csv`, and professional `.md` reports. |
 | ✅ **100% Client-Side** | No backend, no data leakage - privacy-focused by design. |
 
@@ -71,7 +73,7 @@ General scanners can't see past login pages. JSpider's **Authentication Header I
 - 🍪 **Cookie**: Grab your session cookie from the browser (e.g., `PHPSESSID=abc123; token=xyz`) and paste it into the **Cookie** field. JSpider sends it with every request, just like a logged-in browser.
 - 🔑 **Bearer Token**: Copy your `Authorization: Bearer <token>` value and paste it into the **Authorization** field. JSpider attaches it to all scan and probe requests automatically.
 
-Available for both **Smart Crawler** and **Sensitive Path Prober** — click the *Authentication / Custom Headers* toggle to expand the fields before scanning.
+Available for **Smart Crawler** — click the *Authentication / Custom Headers* toggle to expand the fields before scanning.
 
 ---
 
@@ -111,7 +113,7 @@ JSpider automatically excludes architectural noise to focus on valuable recon:
 - **Structure**: HTML5 & CSS3 (Advanced Glassmorphism UI)
 - **Logic**: Vanilla JavaScript (ES6+ / Async-Await)
 - **Engine**: High-Precision Regex Engine (40 secret patterns)
-- **Proxy**: Cloudflare Workers (Lightweight Proxy for CORS bypass)
+- **Proxy**: Cloudflare Workers + 5 fallback CORS proxies (Auto-fallback rotation)
 
 ---
 
