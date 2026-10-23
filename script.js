@@ -715,7 +715,7 @@ const secretPatterns = {
 };
 
 // Fast-Path Check: Only run detailed regexes if one of these keywords is present
-const secretTrigger = /AKIA|AIza|sk_live|ghp_|github_pat_|gh[or]_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_test_|sq0atp-|[0-9]{8,10}:|SG\.|AC[a-f0-9]{32}|heroku|redis|sbp_|npm_|firebaseio/i;
+const secretTrigger = /AKIA|AIza|AIzaSy|sk_live|ghp_|github_pat_|gh[or]_|xox[baprs]|eyJ|-----BEGIN|mongodb|postgres|postgresql|algolia|cloudflare|mysql|sgp_|segment|sgmt|facebook|fb|ya29|hooks\.slack\.com|discord\.com\/api\/webhooks|DefaultEndpointsProtocol|dop_v1_|glpat-|ghs_|sk_|sq0atp-|[0-9]{8,10}:|SG\.|AC[a-f0-9]{32}|heroku|redis|sbp_|sb_|sk-|npm_|firebaseio/i;
 
 const blockedSecretKeywords = [
   "defaultNumberingSystem", "defaultOutputCalendar", "twoDigitCutoffYear",
